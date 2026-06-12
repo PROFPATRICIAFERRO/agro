@@ -3,56 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <meta name="description" content="Jogo educativo sobre agricultura sustentável, polinizadores, compostagem e plantio consciente.">
-    <title>🌱 AGROHERÓIS: A MISSÃO SUSTENTÁVEL</title>
+    <title>🌱 AGROHERÓIS | Missão Sustentável</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <!-- Favicon opcional (comentado) -->
-    <!-- <link rel="icon" type="image/png" href="favicon.png"> -->
 </head>
-<body data-contrast="normal" data-fontsize="normal" data-theme="light">
-    <div class="game-container">
-        <!-- CABEÇALHO COM CONTROLES DE ACESSIBILIDADE -->
-        <header class="main-header">
-            <div class="logo-area">
-                <h1>🌱 AGROHERÓIS: A MISSÃO SUSTENTÁVEL</h1>
-                <p class="subtitle">Agro Forte, Futuro Sustentável</p>
+<body>
+    <div class="wrapper">
+        <header class="hero">
+            <div class="logo">
+                <h1>🌱 AGROHERÓIS</h1>
+                <p>Agro Forte, Futuro Sustentável</p>
             </div>
-            <div class="accessibility-tools">
-                <button id="modoEscuroBtn" aria-label="Modo escuro">🌙 Modo Escuro</button>
-                <button id="altoContrasteBtn" aria-label="Alto contraste">🔆 Alto Contraste</button>
-                <button id="aumentarFonteBtn" aria-label="Aumentar fonte">A+</button>
-                <button id="diminuirFonteBtn" aria-label="Diminuir fonte">A-</button>
-                <button id="reiniciarJogoBtn" aria-label="Reiniciar jogo">🔄 Reiniciar</button>
-                <button id="menuPrincipalBtn" aria-label="Menu principal">🏠 Menu</button>
+            <div class="toolbar">
+                <button id="darkModeBtn" title="Modo Escuro">🌙</button>
+                <button id="highContrastBtn" title="Alto Contraste">🔆</button>
+                <button id="fontPlusBtn" title="Aumentar Fonte">A+</button>
+                <button id="fontMinusBtn" title="Diminuir Fonte">A-</button>
+                <button id="resetGameBtn" title="Reiniciar Jogo">🔄</button>
+                <button id="menuBtn" title="Menu Principal">🏠</button>
             </div>
         </header>
 
-        <!-- BARRA DE PROGRESSO GLOBAL -->
-        <div class="progress-section">
-            <label for="progressoGlobal">Progresso da Missão:</label>
-            <progress id="progressoGlobal" value="0" max="100"></progress>
-            <span id="progressoPercentual">0%</span>
+        <div class="progress-wrapper">
+            <span>📊 MISSÃO</span>
+            <progress id="globalProgress" value="0" max="100"></progress>
+            <span id="progressPercent">0%</span>
         </div>
 
-        <!-- ÁREA PRINCIPAL DO JOGO - DINÂMICA -->
-        <main id="gameMain" class="game-main">
-            <!-- O conteúdo será injetado dinamicamente pelo JavaScript -->
-            <div id="telaAtiva" class="tela-ativa">
-                <!-- FASE 0, 1, 2, 3, QUIZ, CERTIFICADO etc. -->
-            </div>
+        <main id="gameScreen">
+            <!-- Conteúdo dinâmico -->
         </main>
 
-        <!-- FOOTER COM INFORMAÇÕES E PONTUAÇÃO -->
-        <footer class="game-footer">
-            <div class="score-board">
-                <span>🏆 Pontuação Total: <span id="pontuacaoTotal">0</span></span>
-                <span>🥇 Conquistas: <span id="totalConquistas">0</span>/3</span>
-            </div>
-            <div class="personagem-info">
-                <div class="felipe-fala" id="felipeFala">
-                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%238B5A2B'/%3E%3Ccircle cx='35' cy='40' r='5' fill='white'/%3E%3Ccircle cx='65' cy='40' r='5' fill='white'/%3E%3Cpath d='M40 65 Q50 75 60 65' stroke='white' stroke-width='3' fill='none'/%3E%3C/svg%3E" alt="Felipe">
-                    <span id="falaTexto">Olá! Eu sou o Felipe, seu guia!</span>
-                </div>
+        <footer class="dashboard">
+            <div class="score-card">🏆 <span id="score">0</span> pts</div>
+            <div class="badge-card">🏅 Conquistas <span id="badges">0</span>/3</div>
+            <div class="felipe-speech">
+                <div class="avatar">👨‍🌾</div>
+                <div class="bubble" id="felipeMessage">Olá! Sou Felipe, seu guia agroecológico!</div>
             </div>
         </footer>
     </div>
