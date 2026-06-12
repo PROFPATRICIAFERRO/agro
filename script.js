@@ -1,558 +1,417 @@
-// ========== AGRO FORTE - JOGO COMPLETO CORRIGIDO ==========
+// AGROHERÓIS: GAME COMPLETO
+// Controle de estado, fases, pontuação, conquistas, etc.
 
-// DADOS DO JOGADOR
-let playerName = "";
-let selectedChar = "boy";
-
-// ========== FASE 1 - JOGO DA ABELHA ==========
-let beeGame = {
-    canvas: null,
-    ctx: null,
-    beeY: 200,
-    flowers: [],
-    obstacles: [],
-    score: 0,
-    collisions: 0,
-    gameRunning: true,
-    animationId: null,
-    keys: { ArrowUp: false, ArrowDown: false }
+// --- DADOS GLOBAIS ---
+let gameState = {
+    nome: "",
+    avatar: "👦",
+    pontos: 0,
+    faseAtual: "intro", // intro, fase1, fase2, fase3, quiz, certificado, final
+    progresso: 0, // 0-100
+    conquistas: {
+        polinizador: false,
+        compostagem: false,
+        agricultor: false,
+        heroi: false
+    },
+    floresColetadasFase1: 0,
+    fase1Complete: false,
+    fase2Complete: false,
+    fase3Complete: false,
+    quizAcertos: 0,
+    // Controle das fases
+    compostagemAcertos: 0,
+    compostagemErros: 0,
+    compostagemTotalArrastados: 0,
+    itensCompostagemList: [], // armazenar elementos originais
+    fase3MudasPlantadas: 0,
+    regado: false
 };
 
-// ========== FASE 2 - COMPOSTAGEM ==========
-let compostGame = {
-    acertos: 0,
-    erros: 0,
-    items: [
-        { name: "🍌 Casca de Banana", type: "organico", emoji: "🍌" },
-        { name: "🍃 Folhas Secas", type: "organico", emoji: "🍃" },
-        { name: "🍎 Casca de Maçã", type: "organico", emoji: "🍎" },
-        { name: "🥬 Restos de Verduras", type: "organico", emoji: "🥬" },
-        { name: "🥫 Lata", type: "rejeito", emoji: "🥫" },
-        { name: "🧴 Plástico", type: "rejeito", emoji: "🧴" },
-        { name: "🔋 Pilha", type: "rejeito", emoji: "🔋" },
-        { name: "☕ Borra de Café", type: "organico", emoji: "☕" }
-    ],
-    currentItems: []
+// Elementos DOM
+const screens = {
+    intro: document.getElementById("screenIntro"),
+    fase1: document.getElementById("screenFase1"),
+    fase2: document.getElementById("screenFase2"),
+    fase3: document.getElementById("screenFase3"),
+    quiz: document.getElementById("screenQuiz"),
+    certificado: document.getElementById("screenCertificado"),
+    final: document.getElementById("screenFinal")
 };
 
-// ========== FASE 3 - PLANTANDO O FUTURO ==========
-let farmGame = {
-    spots: [
-        { planted: false, grown: false, type: null, name: null, emoji: null },
-        { planted: false, grown: false, type: null, name: null, emoji: null },
-        { planted: false, grown: false, type: null, name: null, emoji: null },
-        { planted: false, grown: false, type: null, name: null, emoji: null },
-        { planted: false, grown: false, type: null, name: null, emoji: null },
-        { planted: false, grown: false, type: null, name: null, emoji: null }
-    ],
-    mudasCount: 0,
-    regadas: 0
-};
+// Função auxiliar: mostrar tela
+function showScreen(screenId) {
+    Object.keys(screens).forEach(id => {
+        screens[id].classList.remove("active");
+    });
+    screens[screenId].classList.add("active");
+    gameState.faseAtual = screenId;
+}
 
-let selectedSeedType = null;
-let selectedSeedName = null;
+// Atualizar barra de progresso global
+function updateGlobalProgress() {
+    let progressValue = 0;
+    if (gameState.fase1Complete) progressValue += 25;
+    if (gameState.fase2Complete) progressValue += 25;
+    if (gameState.fase3Complete) progressValue += 25;
+    if (gameState.quizAcertos >= 3) progressValue += 25;
+    document.getElementById("globalProgressBar").style.width = `${progressValue}%`;
+}
 
-// DOM Elements
-let introScreen, charSelectScreen, fase1Screen, fase2Screen, fase3Screen, finalScreen;
+// Atualizar pontuação na tela
+function updateScoreUI() {
+    document.getElementById("totalScore").innerText = gameState.pontos;
+}
 
-// ========== FUNÇÃO PRINCIPAL DE INICIALIZAÇÃO ==========
-function init() {
-    console.log("Inicializando jogo...");
-    
-    // Capturar telas
-    introScreen = document.getElementById("introScreen");
-    charSelectScreen = document.getElementById("charSelectScreen");
-    fase1Screen = document.getElementById("fase1Screen");
-    fase2Screen = document.getElementById("fase2Screen");
-    fase3Screen = document.getElementById("fase3Screen");
-    finalScreen = document.getElementById("finalScreen");
-    
-    // Verificar se as telas existem
-    if (!introScreen) console.error("introScreen não encontrada");
-    if (!charSelectScreen) console.error("charSelectScreen não encontrada");
-    
-    // ========== FASE 0: Botão CONTINUAR ==========
-    const confirmBtn = document.getElementById("confirmNameBtn");
-    if (confirmBtn) {
-        confirmBtn.addEventListener("click", function() {
-            console.log("Botão CONTINUAR clicado!");
-            const nomeInput = document.getElementById("playerNameIntro");
-            const nome = nomeInput.value.trim();
-            
-            if (nome === "") {
-                alert("🌱 Digite seu nome para começar!");
-                return;
-            }
-            
-            playerName = nome;
-            console.log("Nome do jogador:", playerName);
-            
-            // Atualizar nome em todos os lugares
-            const displayNameSpan = document.getElementById("displayName");
-            if (displayNameSpan) displayNameSpan.textContent = playerName;
-            
-            const finalPlayerNameSpan = document.getElementById("finalPlayerName");
-            if (finalPlayerNameSpan) finalPlayerNameSpan.textContent = playerName;
-            
-            // Trocar tela
-            introScreen.classList.remove("active");
-            charSelectScreen.classList.add("active");
-            console.log("Trocou para tela de seleção de personagem");
-        });
+// Desbloquear conquista (visual)
+function unlockConquista(chave, badgeTextId) {
+    if (!gameState.conquistas[chave]) {
+        gameState.conquistas[chave] = true;
+        const badge = document.querySelector(`.conquista-badge[data-conquista="${chave}"]`);
+        if (badge) badge.classList.add("obtida");
+        // feedback
+        mostrarFeedback(`🏅 Conquista desbloqueada: ${badgeTextId}`, "success");
+    }
+}
+
+// Feedback visual
+function mostrarFeedback(msg, tipo = "info") {
+    const feedbackDiv = document.getElementById("feedbackMsg") || document.querySelector(".feedback");
+    if (feedbackDiv) {
+        feedbackDiv.innerText = msg;
+        feedbackDiv.style.color = tipo === "error" ? "red" : "green";
+        setTimeout(() => { if(feedbackDiv) feedbackDiv.innerText = ""; }, 2000);
     } else {
-        console.error("Botão confirmNameBtn não encontrado!");
+        alert(msg);
     }
-    
-    // ========== SELEÇÃO DE PERSONAGEM ==========
-    const charCards = document.querySelectorAll(".char-card");
-    charCards.forEach(card => {
-        card.addEventListener("click", () => {
-            charCards.forEach(c => c.classList.remove("selected"));
-            card.classList.add("selected");
-            selectedChar = card.getAttribute("data-char");
-            console.log("Personagem selecionado:", selectedChar);
-        });
-    });
-    
-    // Botão para iniciar Fase 1
-    const startFase1Btn = document.getElementById("startFase1Btn");
-    if (startFase1Btn) {
-        startFase1Btn.addEventListener("click", () => {
-            console.log("Iniciando Fase 1...");
-            charSelectScreen.classList.remove("active");
-            startFase1();
-        });
-    }
-    
-    // Botões de próxima fase
-    const nextToFase2Btn = document.getElementById("nextToFase2Btn");
-    if (nextToFase2Btn) {
-        nextToFase2Btn.addEventListener("click", () => {
-            console.log("Indo para Fase 2...");
-            stopBeeGame();
-            fase1Screen.classList.remove("active");
-            startFase2();
-        });
-    }
-    
-    const nextToFase3Btn = document.getElementById("nextToFase3Btn");
-    if (nextToFase3Btn) {
-        nextToFase3Btn.addEventListener("click", () => {
-            console.log("Indo para Fase 3...");
-            fase2Screen.classList.remove("active");
-            startFase3();
-        });
-    }
-    
-    const nextToFinalBtn = document.getElementById("nextToFinalBtn");
-    if (nextToFinalBtn) {
-        nextToFinalBtn.addEventListener("click", () => {
-            console.log("Indo para tela final...");
-            fase3Screen.classList.remove("active");
-            showFinal();
-        });
-    }
-    
-    const playAgainBtn = document.getElementById("playAgainBtn");
-    if (playAgainBtn) {
-        playAgainBtn.addEventListener("click", () => {
-            console.log("Reiniciando jogo...");
-            finalScreen.classList.remove("active");
-            introScreen.classList.add("active");
-            document.getElementById("playerNameIntro").value = "";
-            resetGame();
-        });
-    }
-    
-    // Selecionar personagem padrão (Menino)
-    const defaultCard = document.querySelector('.char-card[data-char="boy"]');
-    if (defaultCard) defaultCard.classList.add("selected");
 }
 
-// ========== FASE 1: JOGO DA ABELHA ==========
-function startFase1() {
-    console.log("startFase1 chamado");
-    
-    const dialogText = document.getElementById("fase1DialogText");
-    if (dialogText) {
-        dialogText.innerHTML = `${playerName}, você sabia que muitas plantas precisam das abelhas para produzir frutas? Sem os polinizadores, a produção de alimentos seria muito menor. Ajude esta abelha a chegar até as flores! Use as setas ↑ e ↓ para desviar da fumaça e do fogo.`;
-    }
-    
-    fase1Screen.classList.add("active");
-    initBeeGame();
+// Atualizar diálogo do Felipe
+function setFelipeDialog(fase, texto) {
+    let elemento;
+    if (fase === "intro") elemento = document.querySelector("#screenIntro .fala-balao p");
+    else if (fase === "fase1") elemento = document.getElementById("fase1Fala");
+    else if (fase === "fase2") elemento = document.getElementById("fase2Fala");
+    else if (fase === "fase3") elemento = document.getElementById("fase3Fala");
+    if (elemento) elemento.innerHTML = texto;
 }
 
-function initBeeGame() {
-    beeGame.canvas = document.getElementById("beeGameCanvas");
-    if (!beeGame.canvas) return;
-    
-    beeGame.ctx = beeGame.canvas.getContext("2d");
-    beeGame.beeY = 200;
-    beeGame.score = 0;
-    beeGame.collisions = 0;
-    beeGame.gameRunning = true;
-    beeGame.flowers = [];
-    beeGame.obstacles = [];
-    
-    beeGame.canvas.width = 800;
-    beeGame.canvas.height = 400;
-    
-    // Criar flores
-    for (let i = 0; i < 10; i++) {
-        beeGame.flowers.push({
-            x: 100 + Math.random() * 600,
-            y: 30 + Math.random() * 340,
-            collected: false
-        });
-    }
-    
-    // Criar obstáculos
-    for (let i = 0; i < 8; i++) {
-        beeGame.obstacles.push({
-            x: 80 + Math.random() * 650,
-            y: 30 + Math.random() * 340,
-            type: Math.random() > 0.5 ? "💨" : "🔥"
-        });
-    }
-    
-    // Controles do teclado
-    const keyHandler = (e) => {
-        if (e.key === "ArrowUp") beeGame.keys.ArrowUp = true;
-        if (e.key === "ArrowDown") beeGame.keys.ArrowDown = true;
-        e.preventDefault();
-    };
-    
-    const keyUpHandler = (e) => {
-        if (e.key === "ArrowUp") beeGame.keys.ArrowUp = false;
-        if (e.key === "ArrowDown") beeGame.keys.ArrowDown = false;
-    };
-    
-    window.removeEventListener("keydown", keyHandler);
-    window.removeEventListener("keyup", keyUpHandler);
-    window.addEventListener("keydown", keyHandler);
-    window.addEventListener("keyup", keyUpHandler);
-    
-    beeGame.keyHandler = keyHandler;
-    beeGame.keyUpHandler = keyUpHandler;
-    
-    updateBeeGame();
-}
+// ---- FASE 1: ABELHA CANVAS ----
+let canvas, ctx, beeX, beeY, flores = [], obstaculos = [];
+let jogoAtivo = false, floresNecessarias = 10, florCount = 0;
+let animFrame;
+let teclas = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
 
-function updateBeeGame() {
-    if (!beeGame.gameRunning) return;
-    
-    // Movimento
-    if (beeGame.keys.ArrowUp && beeGame.beeY > 20) beeGame.beeY -= 3;
-    if (beeGame.keys.ArrowDown && beeGame.beeY < 380) beeGame.beeY += 3;
-    
-    const ctx = beeGame.ctx;
-    ctx.clearRect(0, 0, 800, 400);
-    
-    // Chão
-    ctx.fillStyle = "#6b8c5c";
-    ctx.fillRect(0, 300, 800, 100);
-    
-    // Flores
-    beeGame.flowers.forEach(flower => {
-        if (!flower.collected) {
-            ctx.font = "25px Arial";
-            ctx.fillStyle = "#ff69b4";
-            ctx.fillText("🌸", flower.x, flower.y);
-            
-            if (Math.abs(flower.x - 50) < 30 && Math.abs(flower.y - beeGame.beeY) < 25) {
-                flower.collected = true;
-                beeGame.score++;
-                document.getElementById("floresColetadas").textContent = beeGame.score;
-            }
-        }
-    });
-    
-    // Obstáculos
-    beeGame.obstacles.forEach(obs => {
-        ctx.font = "25px Arial";
-        ctx.fillStyle = obs.type === "💨" ? "#9e9e9e" : "#ff5722";
-        ctx.fillText(obs.type, obs.x, obs.y);
-        
-        if (Math.abs(obs.x - 50) < 30 && Math.abs(obs.y - beeGame.beeY) < 25) {
-            beeGame.collisions++;
-            document.getElementById("colisoesCount").textContent = beeGame.collisions;
-            obs.x = 700 + Math.random() * 100;
-            obs.y = 30 + Math.random() * 340;
-        }
-    });
-    
-    // Abelha
-    ctx.font = "30px Arial";
-    ctx.fillStyle = "#ffc107";
-    ctx.fillText(selectedChar === "boy" ? "🐝👦" : "🐝👧", 50, beeGame.beeY);
-    
-    // Movimento
-    beeGame.flowers.forEach(flower => { if (!flower.collected) flower.x -= 2; });
-    beeGame.obstacles.forEach(obs => { obs.x -= 2.5; });
-    
-    // Reciclar
-    beeGame.flowers = beeGame.flowers.filter(f => f.x > -50);
-    beeGame.obstacles = beeGame.obstacles.filter(o => o.x > -50);
-    
-    if (beeGame.flowers.length < 8 && Math.random() < 0.02) {
-        beeGame.flowers.push({ x: 800, y: 30 + Math.random() * 340, collected: false });
-    }
-    if (beeGame.obstacles.length < 6 && Math.random() < 0.015) {
-        beeGame.obstacles.push({ x: 800, y: 30 + Math.random() * 340, type: Math.random() > 0.5 ? "💨" : "🔥" });
-    }
-    
-    // Vitória
-    if (beeGame.score >= 10) {
-        beeGame.gameRunning = false;
-        document.getElementById("nextToFase2Btn").style.display = "block";
-        const dialog = document.getElementById("fase1DialogText");
-        if (dialog) {
-            dialog.innerHTML = `Muito bem, ${playerName}! Você ajudou a proteger os polinizadores e contribuiu para uma agricultura mais sustentável.`;
-        }
+function iniciarFase1Game() {
+    if (gameState.fase1Complete) {
+        mostrarFeedback("Você já completou esta fase! Avance.");
         return;
     }
-    
-    beeGame.animationId = requestAnimationFrame(updateBeeGame);
+    canvas = document.getElementById("beeCanvas");
+    ctx = canvas.getContext("2d");
+    beeX = canvas.width/2; beeY = canvas.height/2;
+    gerarElementos();
+    florCount = 0;
+    document.getElementById("floresColetadas").innerText = florCount;
+    jogoAtivo = true;
+    function gameLoop() {
+        if(!jogoAtivo) return;
+        moverAbelha();
+        detectarColisoes();
+        desenhar();
+        if(florCount >= floresNecessarias) {
+            finalizarFase1Sucesso();
+            return;
+        }
+        animFrame = requestAnimationFrame(gameLoop);
+    }
+    if(animFrame) cancelAnimationFrame(animFrame);
+    gameLoop();
 }
 
-function stopBeeGame() {
-    if (beeGame.animationId) cancelAnimationFrame(beeGame.animationId);
-    if (beeGame.keyHandler) window.removeEventListener("keydown", beeGame.keyHandler);
-    if (beeGame.keyUpHandler) window.removeEventListener("keyup", beeGame.keyUpHandler);
+function gerarElementos() {
+    flores = [];
+    obstaculos = [];
+    for(let i=0;i<10;i++) flores.push({x: 50+Math.random()*(canvas.width-100), y: 50+Math.random()*(canvas.height-100), r: 12});
+    for(let i=0;i<6;i++) obstaculos.push({x: 60+Math.random()*(canvas.width-120), y: 60+Math.random()*(canvas.height-120), tipo: i%2===0 ? "fumaça" : "fogo"});
 }
 
-// ========== FASE 2: COMPOSTAGEM ==========
-function startFase2() {
-    console.log("startFase2 chamado");
-    
-    const dialog = document.getElementById("fase2DialogText");
-    if (dialog) {
-        dialog.innerHTML = `${playerName}, agora vamos aprender sobre compostagem. Restos de frutas, verduras e folhas podem virar adubo natural. Clique nos itens certos para colocar na composteira!`;
-    }
-    
-    compostGame.acertos = 0;
-    compostGame.erros = 0;
-    document.getElementById("acertosComp").textContent = "0";
-    document.getElementById("errosComp").textContent = "0";
-    
-    compostGame.currentItems = [...compostGame.items];
-    for (let i = compostGame.currentItems.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [compostGame.currentItems[i], compostGame.currentItems[j]] = [compostGame.currentItems[j], compostGame.currentItems[i]];
-    }
-    
-    renderCompostItems();
-    
-    document.getElementById("nextToFase3Btn").style.display = "none";
-    document.getElementById("compostMessage").innerHTML = "";
-    
-    // Configurar lixeira
-    const lixeira = document.getElementById("lixeira");
-    if (lixeira) {
-        lixeira.onclick = () => handleWrongItem();
-    }
-    
-    fase2Screen.classList.add("active");
+function moverAbelha() {
+    let step = 6;
+    if(teclas.ArrowUp && beeY>20) beeY -= step;
+    if(teclas.ArrowDown && beeY<canvas.height-20) beeY += step;
+    if(teclas.ArrowLeft && beeX>20) beeX -= step;
+    if(teclas.ArrowRight && beeX<canvas.width-20) beeX += step;
 }
 
-function renderCompostItems() {
-    const area = document.getElementById("itemsArea");
-    if (!area) return;
-    area.innerHTML = "";
-    
-    compostGame.currentItems.forEach((item, index) => {
-        const div = document.createElement("div");
-        div.className = "compost-item";
-        div.innerHTML = `<span style="font-size:2rem">${item.emoji}</span><br>${item.name}`;
-        div.onclick = () => handleCompostClick(index, item);
-        area.appendChild(div);
-    });
-}
-
-function handleCompostClick(index, item) {
-    const isCorrect = item.type === "organico";
-    
-    if (isCorrect) {
-        compostGame.acertos++;
-        document.getElementById("acertosComp").textContent = compostGame.acertos;
-        document.getElementById("compostMessage").innerHTML = "✅ Correto! Este item pode ir para a composteira! ✅";
-        document.getElementById("compostMessage").style.background = "#c8e6c9";
-        
-        compostGame.currentItems.splice(index, 1);
-        renderCompostItems();
-    } else {
-        // Itens errados vão para a lixeira
-        handleWrongItem();
+function detectarColisoes() {
+    for(let i=0;i<flores.length;i++) {
+        const f = flores[i];
+        const dx = beeX - f.x, dy = beeY - f.y;
+        if(Math.hypot(dx,dy) < 25) {
+            flores.splice(i,1);
+            florCount++;
+            document.getElementById("floresColetadas").innerText = florCount;
+            gameState.pontos += 10;
+            updateScoreUI();
+            mostrarFeedback("+10 pontos! Flor polinizada!", "success");
+            flores.push({x: 30+Math.random()*(canvas.width-60), y: 30+Math.random()*(canvas.height-60), r:12});
+            break;
+        }
     }
-    
-    if (compostGame.currentItems.length === 0 || compostGame.acertos >= 5) {
-        document.getElementById("compostMessage").innerHTML = `🎉 Excelente trabalho, ${playerName}! Você transformou resíduos orgânicos em adubo natural! 🎉`;
-        document.getElementById("nextToFase3Btn").style.display = "block";
+    for(let i=0;i<obstaculos.length;i++) {
+        const obs = obstaculos[i];
+        if(Math.hypot(beeX-obs.x, beeY-obs.y) < 25) {
+            gameState.pontos = Math.max(0, gameState.pontos-5);
+            updateScoreUI();
+            mostrarFeedback("😵 Colidiu com "+obs.tipo+"! -5 pontos", "error");
+            obstaculos[i] = {x: 30+Math.random()*(canvas.width-60), y: 30+Math.random()*(canvas.height-60), tipo: obs.tipo};
+        }
     }
 }
 
-function handleWrongItem() {
-    compostGame.erros++;
-    document.getElementById("errosComp").textContent = compostGame.erros;
-    document.getElementById("compostMessage").innerHTML = "❌ Errado! Este item NÃO pode ir para a composteira. Coloque no lixo rejeitado. ❌";
-    document.getElementById("compostMessage").style.background = "#ffcdd2";
-    
-    // Remover um item orgânico aleatório para equilibrar
-    const organicIndex = compostGame.currentItems.findIndex(i => i.type === "organico");
-    if (organicIndex !== -1) {
-        compostGame.currentItems.splice(organicIndex, 1);
-        renderCompostItems();
-    }
+function desenhar() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#ffd966";
+    ctx.beginPath(); ctx.arc(beeX, beeY, 18, 0, 2*Math.PI); ctx.fill();
+    ctx.fillStyle = "black";
+    ctx.fillText("🐝", beeX-12, beeY+6);
+    flores.forEach(f=>{ ctx.fillStyle = "pink"; ctx.beginPath(); ctx.arc(f.x,f.y,10,0,2*Math.PI); ctx.fill(); ctx.fillStyle = "yellow"; ctx.fillText("🌸", f.x-5, f.y+4); });
+    obstaculos.forEach(o=>{ ctx.fillStyle = o.tipo==="fumaça" ? "#aaa" : "orange"; ctx.beginPath(); ctx.arc(o.x,o.y,12,0,2*Math.PI); ctx.fill(); ctx.fillStyle="black"; ctx.fillText(o.tipo==="fumaça"?"💨":"🔥", o.x-7, o.y+4); });
 }
 
-// ========== FASE 3: PLANTANDO O FUTURO ==========
-function startFase3() {
-    console.log("startFase3 chamado");
-    
-    const dialog = document.getElementById("fase3DialogText");
-    if (dialog) {
-        dialog.innerHTML = `${playerName}, graças às abelhas e à compostagem, agora podemos produzir alimentos de forma sustentável. Vamos plantar mudas e ajudar o campo a crescer!`;
-    }
-    
-    // Reset
-    farmGame.spots = [
-        { planted: false, grown: false, type: null, name: null, emoji: null },
-        { planted: false, grown: false, type: null, name: null, emoji: null },
-        { planted: false, grown: false, type: null, name: null, emoji: null },
-        { planted: false, grown: false, type: null, name: null, emoji: null },
-        { planted: false, grown: false, type: null, name: null, emoji: null },
-        { planted: false, grown: false, type: null, name: null, emoji: null }
+function finalizarFase1Sucesso() {
+    jogoAtivo = false;
+    if(animFrame) cancelAnimationFrame(animFrame);
+    gameState.fase1Complete = true;
+    unlockConquista("polinizador", "Guardião das Abelhas");
+    mostrarFeedback("✅ Fase 1 concluída! Você salvou os polinizadores!", "success");
+    setFelipeDialog("fase1", "Muito bem! Você protegeu os polinizadores! As abelhas ajudam na produção de frutos. Vamos para a Compostagem!");
+    document.getElementById("iniciarFase1Btn").disabled = true;
+    // Avançar manual via botão ou automático após 2s? Adicionar botão próximo, porém o fluxo: botão de avançar pode ser integrado. Crio um botão para próxima fase.
+    let nextBtn = document.createElement("button");
+    nextBtn.innerText = "▶ Próxima Fase (Compostagem)";
+    nextBtn.className = "btn-acao";
+    nextBtn.onclick = () => { showScreen("fase2"); inicializarFase2(); nextBtn.remove(); };
+    document.querySelector("#screenFase1 .minigame-container").appendChild(nextBtn);
+    updateGlobalProgress();
+}
+
+// ---- FASE 2: COMPOSTAGEM DRAG & DROP ----
+function inicializarFase2() {
+    if(gameState.fase2Complete) return;
+    setFelipeDialog("fase2", "Agora vamos separar os resíduos! Arraste os orgânicos para a composteira. Acerto +10, erro -5. Complete todos os itens!");
+    const itensData = [
+        { nome: "🍌 Casca de banana", tipo: "certo" }, { nome: "🍎 Casca de maçã", tipo: "certo" }, { nome: "🍂 Folhas secas", tipo: "certo" },
+        { nome: "🥬 Restos de verduras", tipo: "certo" }, { nome: "🔋 Pilha", tipo: "errado" }, { nome: "🥫 Lata", tipo: "errado" }, { nome: "🥤 Plástico", tipo: "errado" }
     ];
-    farmGame.mudasCount = 0;
-    farmGame.regadas = 0;
-    selectedSeedType = null;
-    selectedSeedName = null;
-    
-    document.getElementById("mudasPlantadas").textContent = "0";
-    document.getElementById("regadasCount").textContent = "0";
-    document.getElementById("nextToFinalBtn").style.display = "none";
-    document.getElementById("plantMessage").innerHTML = "";
-    
-    renderPlantSpots();
-    enableSeedlings();
-    
-    document.getElementById("waterBtn").onclick = waterPlants;
-    
-    fase3Screen.classList.add("active");
-}
-
-function renderPlantSpots() {
-    const container = document.getElementById("plantSpots");
-    if (!container) return;
+    const container = document.getElementById("itensCompostagem");
     container.innerHTML = "";
-    
-    farmGame.spots.forEach((spot, index) => {
+    gameState.compostagemAcertos = 0; gameState.compostagemErros = 0; gameState.compostagemTotalArrastados = 0;
+    document.getElementById("acertosComp").innerText = "0";
+    document.getElementById("errosComp").innerText = "0";
+    document.getElementById("finalizarFase2Btn").disabled = true;
+    itensData.forEach((item, idx) => {
         const div = document.createElement("div");
-        div.className = `plant-spot ${spot.planted ? "planted" : "empty"} ${spot.grown ? "grown" : ""}`;
-        
-        if (spot.planted) {
-            div.innerHTML = `<div class="plant-emoji">${spot.emoji}</div>
-                            <div class="plant-name">${spot.name}</div>
-                            ${spot.grown ? '<span style="font-size:0.7rem">🌱 CRESCIDO! 🌱</span>' : '<span style="font-size:0.7rem">💧 Precisa regar</span>'}`;
-        } else {
-            div.innerHTML = `<div class="plant-emoji">⬜</div>
-                            <div class="plant-name">Vazio</div>
-                            <span style="font-size:0.7rem">Clique para plantar</span>`;
-        }
-        
-        div.onclick = () => plantSeed(index);
+        div.className = "item-compostagem";
+        div.setAttribute("draggable", "true");
+        div.setAttribute("data-tipo", item.tipo);
+        div.innerText = item.nome;
+        div.id = `dragItem${idx}`;
+        div.addEventListener("dragstart", handleDragStart);
         container.appendChild(div);
+        gameState.itensCompostagemList.push(div);
     });
 }
 
-function enableSeedlings() {
-    const seedlings = document.querySelectorAll(".seedling");
-    seedlings.forEach(seedling => {
-        seedling.onclick = () => {
-            const type = seedling.getAttribute("data-type");
-            const name = seedling.textContent;
-            selectedSeedType = type;
-            selectedSeedName = name;
-            document.getElementById("plantMessage").innerHTML = `🌱 Muda de ${name} selecionada! Clique em um espaço vazio para plantar. 🌱`;
-            document.getElementById("plantMessage").style.background = "#c8e6c9";
-        };
-    });
+let dragItemAtual = null;
+function handleDragStart(e) {
+    dragItemAtual = e.target;
+    e.dataTransfer.setData("text/plain", "");
 }
-
-function plantSeed(index) {
-    if (!selectedSeedType) {
-        document.getElementById("plantMessage").innerHTML = "⚠️ Primeiro selecione uma muda! ⚠️";
-        document.getElementById("plantMessage").style.background = "#fff3e0";
-        return;
-    }
-    
-    if (farmGame.spots[index].planted) {
-        document.getElementById("plantMessage").innerHTML = "❌ Este espaço já está plantado! ❌";
-        return;
-    }
-    
-    const emojis = { tomate: "🍅", alface: "🥬", milho: "🌽" };
-    farmGame.spots[index] = {
-        planted: true,
-        grown: false,
-        type: selectedSeedType,
-        name: selectedSeedName,
-        emoji: emojis[selectedSeedType]
-    };
-    
-    farmGame.mudasCount++;
-    document.getElementById("mudasPlantadas").textContent = farmGame.mudasCount;
-    
-    selectedSeedType = null;
-    selectedSeedName = null;
-    
-    renderPlantSpots();
-    document.getElementById("plantMessage").innerHTML = "✅ Muda plantada! Não esqueça de regar para crescer! ✅";
-}
-
-function waterPlants() {
-    let wateredCount = 0;
-    
-    farmGame.spots.forEach(spot => {
-        if (spot.planted && !spot.grown) {
-            spot.grown = true;
-            wateredCount++;
-        }
-    });
-    
-    farmGame.regadas += wateredCount;
-    document.getElementById("regadasCount").textContent = farmGame.regadas;
-    renderPlantSpots();
-    
-    if (wateredCount > 0) {
-        document.getElementById("plantMessage").innerHTML = `💧 ${wateredCount} planta(s) regada(s)! Agora estão crescendo forte! 💧`;
+const composteira = document.getElementById("composteira");
+composteira.addEventListener("dragover", (e) => e.preventDefault());
+composteira.addEventListener("drop", (e) => {
+    e.preventDefault();
+    if(!dragItemAtual) return;
+    const tipo = dragItemAtual.getAttribute("data-tipo");
+    const isCerto = (tipo === "certo");
+    if(isCerto) {
+        gameState.compostagemAcertos++;
+        gameState.pontos += 10;
+        mostrarFeedback("✅ Ótimo! +10 pontos", "success");
     } else {
-        document.getElementById("plantMessage").innerHTML = "⚠️ Não há plantas para regar! Plante primeiro! ⚠️";
+        gameState.compostagemErros++;
+        gameState.pontos = Math.max(0, gameState.pontos-5);
+        mostrarFeedback("❌ Isso não vai para compostagem! -5 pontos", "error");
     }
-    
-    const allPlanted = farmGame.spots.every(spot => spot.planted);
-    const allGrown = farmGame.spots.every(spot => spot.grown);
-    
-    if (allPlanted && allGrown) {
-        document.getElementById("nextToFinalBtn").style.display = "block";
-        document.getElementById("plantMessage").innerHTML = `🎉 Parabéns, ${playerName}! Sua fazenda está produzindo! 🎉`;
+    updateScoreUI();
+    document.getElementById("acertosComp").innerText = gameState.compostagemAcertos;
+    document.getElementById("errosComp").innerText = gameState.compostagemErros;
+    dragItemAtual.remove();
+    gameState.compostagemTotalArrastados++;
+    if(gameState.compostagemTotalArrastados >= 7) {
+        gameState.fase2Complete = true;
+        unlockConquista("compostagem", "Mestre da Compostagem");
+        document.getElementById("finalizarFase2Btn").disabled = false;
+        setFelipeDialog("fase2", "Excelente! Você produziu adubo natural. Fortaleceu o solo. Vamos plantar!");
+    }
+    dragItemAtual = null;
+});
+
+document.getElementById("finalizarFase2Btn").addEventListener("click", () => {
+    if(gameState.fase2Complete){
+        showScreen("fase3");
+        inicializarFase3();
+        updateGlobalProgress();
+    }
+});
+
+// ---- FASE 3 PLANTIO ----
+function inicializarFase3() {
+    if(gameState.fase3Complete) return;
+    setFelipeDialog("fase3", "Arraste cada muda para o canteiro correto, depois regue e veja crescer!");
+    gameState.fase3MudasPlantadas = 0;
+    document.getElementById("regarContainer").style.display = "none";
+    document.getElementById("crescimentoAnimacao").innerHTML = "";
+    document.getElementById("finalizarFase3Btn").disabled = true;
+    const mudas = document.querySelectorAll(".muda");
+    const canteiros = document.querySelectorAll(".canteiro");
+    mudas.forEach(m => {
+        m.addEventListener("dragstart", e => {
+            e.dataTransfer.setData("planta", m.getAttribute("data-planta"));
+        });
+    });
+    canteiros.forEach(c => {
+        c.addEventListener("dragover", e => e.preventDefault());
+        c.addEventListener("drop", e => {
+            e.preventDefault();
+            const planta = e.dataTransfer.getData("planta");
+            const expected = c.getAttribute("data-expected");
+            if(planta === expected && !c.classList.contains("plantado")) {
+                c.classList.add("plantado");
+                c.innerText = c.innerText + ` ✅ ${planta}`;
+                gameState.fase3MudasPlantadas++;
+                if(gameState.fase3MudasPlantadas === 3) {
+                    document.getElementById("regarContainer").style.display = "block";
+                }
+                mostrarFeedback(`Muda de ${planta} plantada corretamente!`, "success");
+            } else {
+                mostrarFeedback("Canteiro incorreto ou já plantado!", "error");
+            }
+        });
+    });
+    document.getElementById("regarPlantasBtn").onclick = () => {
+        if(gameState.fase3MudasPlantadas === 3 && !gameState.regado) {
+            gameState.regado = true;
+            let etapas = ["🌱", "🌿", "🍅 Tomate | 🥬 Alface | 🌽 Milho"];
+            let i=0;
+            const growthDiv = document.getElementById("crescimentoAnimacao");
+            const interval = setInterval(() => {
+                growthDiv.innerHTML = etapas[i] || "🌾 Colheita abundante!";
+                i++;
+                if(i>2) {
+                    clearInterval(interval);
+                    gameState.pontos += 50;
+                    updateScoreUI();
+                    gameState.fase3Complete = true;
+                    unlockConquista("agricultor", "Agricultor Sustentável");
+                    document.getElementById("finalizarFase3Btn").disabled = false;
+                    setFelipeDialog("fase3", "Parabéns! Você cultivou alimentos de forma sustentável!");
+                }
+            }, 1000);
+        }
+    };
+    document.getElementById("finalizarFase3Btn").onclick = () => {
+        if(gameState.fase3Complete) { showScreen("quiz"); iniciarQuiz(); updateGlobalProgress();}
+    };
+}
+
+// QUIZ
+let quizIndex = 0, quizPerguntas = [
+    { pergunta: "Qual é a função das abelhas?", opcoes: ["Produzir plástico", "Polinizar plantas", "Produzir fumaça"], correta: 1 },
+    { pergunta: "O que pode ir para a composteira?", opcoes: ["Casca de banana", "Pilha", "Plástico"], correta: 0 },
+    { pergunta: "O que ajuda uma agricultura sustentável?", opcoes: ["Queimadas", "Desmatamento", "Compostagem e preservação ambiental"], correta: 2 }
+];
+function iniciarQuiz() {
+    quizIndex = 0; gameState.quizAcertos = 0;
+    exibirPergunta();
+}
+function exibirPergunta() {
+    if(quizIndex >= quizPerguntas.length) finalizarQuiz();
+    else {
+        const p = quizPerguntas[quizIndex];
+        document.getElementById("quizPergunta").innerHTML = `<h3>${p.pergunta}</h3>`;
+        const opDiv = document.getElementById("quizOpcoes");
+        opDiv.innerHTML = "";
+        p.opcoes.forEach((op, idx) => {
+            let btn = document.createElement("button");
+            btn.innerText = op;
+            btn.onclick = () => {
+                if(idx === p.correta) {
+                    gameState.quizAcertos++; gameState.pontos += 10;
+                    mostrarFeedback("Correto! +10 pontos", "success");
+                } else mostrarFeedback("Errado!", "error");
+                updateScoreUI();
+                quizIndex++;
+                exibirPergunta();
+            };
+            opDiv.appendChild(btn);
+        });
     }
 }
-
-// ========== TELA FINAL ==========
-function showFinal() {
-    console.log("showFinal chamado");
-    finalScreen.classList.add("active");
+function finalizarQuiz() {
+    if(gameState.quizAcertos >= 3) unlockConquista("heroi", "Herói do Agro Sustentável");
+    showScreen("certificado");
+    document.getElementById("certNome").innerText = gameState.nome;
+    document.getElementById("dataCertificado").innerText = new Date().toLocaleDateString();
+    updateGlobalProgress();
 }
-
-function resetGame() {
-    if (beeGame.animationId) cancelAnimationFrame(beeGame.animationId);
-    beeGame.gameRunning = false;
-    
-    document.getElementById("nextToFase2Btn").style.display = "none";
-    document.getElementById("nextToFase3Btn").style.display = "none";
-    document.getElementById("nextToFinalBtn").style.display = "none";
+document.getElementById("baixarCertificadoBtn").addEventListener("click", () => window.print());
+document.getElementById("avancarTelaFinalBtn").addEventListener("click", () => {
+    showScreen("final");
+    document.getElementById("finalMensagem").innerHTML = `${gameState.nome}, lembre-se: produzir alimentos e preservar a natureza devem caminhar juntos.<br>Você concluiu sua missão com sucesso! 🌎🚜`;
+});
+// Reiniciar e menu
+function resetFullGame() {
+    location.reload();
 }
+document.getElementById("resetGameBtn").onclick = resetFullGame;
+document.getElementById("menuPrincipalBtn").onclick = () => resetFullGame();
+document.getElementById("jogarNovamenteBtn").onclick = resetFullGame;
+document.getElementById("menuFinalBtn").onclick = resetFullGame;
 
-// Iniciar tudo
-window.addEventListener("DOMContentLoaded", init);
+// Controles de interface (modo escuro, fonte, alto contraste)
+document.getElementById("darkModeToggle").onclick = () => document.body.classList.toggle("dark-mode");
+document.getElementById("highContrastToggle").onclick = () => document.body.classList.toggle("high-contrast");
+document.getElementById("increaseFontBtn").onclick = () => {
+    if(document.body.classList.contains("font-large")) document.body.classList.add("font-xlarge");
+    else if(document.body.classList.contains("font-xlarge")) {}
+    else document.body.classList.add("font-large");
+};
+document.getElementById("decreaseFontBtn").onclick = () => {
+    if(document.body.classList.contains("font-xlarge")) document.body.classList.remove("font-xlarge");
+    else if(document.body.classList.contains("font-large")) document.body.classList.remove("font-large");
+};
+
+// Fluxo inicial da apresentação
+document.getElementById("confirmarNomeBtn").onclick = () => {
+    let nome = document.getElementById("nomeJogador").value.trim();
+    if(nome === "") nome = "AgroHerói";
+    gameState.nome = nome;
+    document.getElementById("nomeExibido").innerText = nome;
+    document.getElementById("playerNameDisplay").innerText = nome;
+    document.querySelector(".form-apresentacao").style.display = "none";
+    document.getElementById("personagemChoice").style.display = "block";
+};
+document.getElementById("personagemMenino").onclick = () => { gameState.avatar = "👦"; finalizarIntro(); };
+document.getElementById("personagemMenina").onclick = () => { gameState.avatar = "👧"; finalizarIntro(); };
+function finalizarIntro() {
+    document.getElementById("playerAvatarDisplay").innerHTML = gameState.avatar;
+    showScreen("fase1");
+    setFelipeDialog("fase1", `${gameState.nome}, você sabia que muitas plantas dependem das abelhas? Use as setas, colete 10 flores e desvie da fumaça/fogo.`);
+    document.getElementById("iniciarFase1Btn").addEventListener("click", iniciarFase1Game);
+}
+window.addEventListener("keydown", (e) => { if(teclas.hasOwnProperty(e.key)) teclas[e.key]=true; });
+window.addEventListener("keyup", (e) => { if(teclas.hasOwnProperty(e.key)) teclas[e.key]=false; });
+updateScoreUI();
