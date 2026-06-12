@@ -3,169 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>🌾 Agro Forte | Futuro Sustentável</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <!-- CSS principal -->
+    <title>AgroHeróis: A Missão Sustentável</title>
+    <!-- Placeholder para ícones e fontes externas -->
     <link rel="stylesheet" href="css/style.css">
+    <!-- Google Fonts para tipografia orgânica -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Placeholder para ícones de font awesome (opcional, sem dependência obrigatória) -->
 </head>
 <body>
-    <!-- ========== BARRA DE ACESSIBILIDADE E CONTROLES ========== -->
-    <div class="accessibility-bar">
-        <button id="darkModeToggle" aria-label="Modo escuro">🌙 Modo Escuro</button>
-        <div class="font-controls">
-            <button id="fontMinus" aria-label="Diminuir fonte">A-</button>
-            <button id="fontPlus" aria-label="Aumentar fonte">A+</button>
+    <!-- HEADER: controles globais e progresso -->
+    <header class="game-header">
+        <div class="header-left">
+            <h1 class="game-logo">🌱 AGROHERÓIS</h1>
+            <div class="player-info">
+                <span id="playerNameDisplay">Visitante</span>
+                <span id="playerAvatarDisplay">👦</span>
+            </div>
         </div>
-        <div class="volume-control">
-            <label for="volumeSlider">🔊 Volume</label>
-            <input type="range" id="volumeSlider" min="0" max="100" value="70">
+        <div class="header-controls">
+            <button id="darkModeToggle" aria-label="Modo escuro" title="Modo escuro">🌙</button>
+            <button id="increaseFontBtn" aria-label="Aumentar fonte" title="Aumentar fonte">A+</button>
+            <button id="decreaseFontBtn" aria-label="Diminuir fonte" title="Diminuir fonte">A-</button>
+            <button id="highContrastToggle" aria-label="Alto contraste" title="Alto contraste">👁️</button>
+            <button id="resetGameBtn" aria-label="Reiniciar jogo" title="Reiniciar">🔄</button>
+            <button id="menuPrincipalBtn" aria-label="Menu principal" title="Menu principal">🏠</button>
         </div>
+    </header>
+
+    <!-- Barra de progresso e pontuação -->
+    <div class="progress-stats">
+        <div class="progress-container">
+            <div class="progress-bar" id="globalProgressBar" style="width: 0%;"></div>
+        </div>
+        <div class="score-badge">⭐ Pontos: <span id="totalScore">0</span></div>
     </div>
 
-    <main class="game-wrapper" id="gameWrapper">
-        <!-- ========== TELA 0: APRESENTAÇÃO ========== -->
-        <section id="introScreen" class="screen active">
-            <div class="intro-container">
-                <div class="felipe-box">
-                    <div class="felipe-avatar animate-bounce">👨‍🌾</div>
-                    <div class="felipe-speech">
-                        <p id="introSpeech1">Olá! Eu sou o Felipe!</p>
-                        <p id="introSpeech2">Um Agro Forte depende do equilíbrio entre a produção de alimentos e a preservação do meio ambiente.</p>
-                        <p id="introSpeech3">Como você se chama?</p>
+    <!-- Conquistas (badges) -->
+    <div class="conquistas-container" id="conquistasContainer">
+        <span class="conquista-badge" data-conquista="polinizador">🏅 Guardião das Abelhas</span>
+        <span class="conquista-badge" data-conquista="compostagem">🏅 Mestre da Compostagem</span>
+        <span class="conquista-badge" data-conquista="agricultor">🏅 Agricultor Sustentável</span>
+        <span class="conquista-badge" data-conquista="heroi">🏆 Herói do Agro Sustentável</span>
+    </div>
+
+    <main>
+        <!-- TELAS DINÂMICAS (cada fase é uma section controlada pelo JS) -->
+
+        <!-- FASE 0: APRESENTAÇÃO -->
+        <section id="screenIntro" class="game-screen active">
+            <div class="cenario-placeholder">
+                <!-- Placeholder imagem: fundo fazenda sustentável -->
+                <div class="dialogo-felipe" id="dialogIntro">
+                    <div class="avatar-felipe">👦</div>
+                    <div class="fala-balao">
+                        <p id="introFala">Olá! Eu sou o Felipe!<br>Bem-vindo ao AgroHeróis: A Missão Sustentável.<br>Um Agro Forte depende do equilíbrio entre produção e preservação.<br>Como você se chama?</p>
                     </div>
                 </div>
-                <div class="name-input-area">
-                    <input type="text" id="playerNameInput" placeholder="Digite seu nome..." maxlength="20">
-                    <button id="confirmNameBtn" class="btn-primary">🌱 CONTINUAR 🌱</button>
+                <div class="form-apresentacao">
+                    <label for="nomeJogador">Seu nome:</label>
+                    <input type="text" id="nomeJogador" placeholder="Digite seu nome" autocomplete="off">
+                    <button id="confirmarNomeBtn">Confirmar</button>
                 </div>
+                <div id="personagemChoice" style="display:none;">
+                    <p>Prazer em conhecer você, <span id="nomeExibido"></span>! Escolha seu personagem:</p>
+                    <button id="personagemMenino" class="personagem-btn">👦 Menino</button>
+                    <button id="personagemMenina" class="personagem-btn">👧 Menina</button>
+                </div>
+                <div id="inicioMsg" style="display:none;"></div>
             </div>
         </section>
 
-        <!-- ========== TELA 0.5: ESCOLHA DO PERSONAGEM ========== -->
-        <section id="charScreen" class="screen">
-            <div class="char-container">
-                <div class="felipe-speech small-bubble">
-                    <p id="charGreeting">Prazer em conhecer você, <span id="displayName"></span>!</p>
-                    <p>Hoje vamos aprender como pequenas ações ajudam a construir um futuro sustentável.</p>
-                    <p>Primeiro escolha seu personagem!</p>
-                </div>
-                <div class="char-options">
-                    <div class="char-card" data-char="boy">
-                        <div class="char-icon">👦</div>
-                        <h3>Menino</h3>
-                        <p>Fazendeiro aprendiz</p>
-                    </div>
-                    <div class="char-card" data-char="girl">
-                        <div class="char-icon">👧</div>
-                        <h3>Menina</h3>
-                        <p>Guardiã da natureza</p>
-                    </div>
-                </div>
-                <button id="startGameBtn" class="btn-primary">🐝 COMEÇAR MISSÃO 🐝</button>
+        <!-- FASE 1: SALVANDO OS POLINIZADORES (Canvas minigame) -->
+        <section id="screenFase1" class="game-screen">
+            <div class="dialogo-felipe" id="dialogFase1">
+                <div class="avatar-felipe">👦</div>
+                <div class="fala-balao"><p id="fase1Fala">Carregando explicação...</p></div>
+            </div>
+            <div class="minigame-container">
+                <canvas id="beeCanvas" width="700" height="400" style="background: radial-gradient(circle, #c8e6c9, #a5d6a7); border-radius: 20px; border: 3px solid #6b4c3b;"></canvas>
+                <div class="game-stats">🌸 Flores coletadas: <span id="floresColetadas">0</span> / 10</div>
+                <button id="iniciarFase1Btn" class="btn-acao">🐝 Iniciar Missão Polinizadores</button>
+                <div id="feedbackMsg" class="feedback"></div>
             </div>
         </section>
 
-        <!-- ========== FASE 1: POLINIZADORES ========== -->
-        <section id="fase1Screen" class="screen">
-            <div class="phase-header">
-                <h1>🐝 FASE 1: Salvando os Polinizadores</h1>
-                <div class="stats-hud">
-                    <span>🌸 Flores: <span id="flowerCount">0</span>/10</span>
-                    <span>💨 Choques: <span id="collisionCount">0</span></span>
+        <!-- FASE 2: COMPOSTAGEM (Drag and Drop) -->
+        <section id="screenFase2" class="game-screen">
+            <div class="dialogo-felipe" id="dialogFase2">
+                <div class="avatar-felipe">👦</div>
+                <div class="fala-balao"><p id="fase2Fala"></p></div>
+            </div>
+            <div class="compostagem-area">
+                <div class="itens-lista" id="itensCompostagem">
+                    <!-- Itens arrastáveis gerados dinamicamente -->
+                </div>
+                <div class="composteira" id="composteira" droppable="true">
+                    <div class="composteira-label">🗑️ COMPOSTEIRA 🌿</div>
+                    <div class="drop-zone">Arraste os itens orgânicos para cá</div>
                 </div>
             </div>
-            <div class="felipe-dialog">
-                <div class="felipe-avatar-small">👨‍🌾</div>
-                <div class="dialog-text" id="fase1Dialog">
-                    Carregando missão...
-                </div>
-            </div>
-            <div class="game-canvas-area">
-                <canvas id="beeCanvas" width="800" height="400"></canvas>
-                <div class="game-tips">🎮 Use as setas ↑ e ↓ para mover a abelha. Desvie da fumaça (💨) e do fogo (🔥)!</div>
-            </div>
-            <button id="nextToFase2" class="next-btn" style="display:none;">♻️ PRÓXIMA FASE - COMPOSTAGEM ♻️</button>
+            <div class="pontuacao-compostagem">Acertos: <span id="acertosComp">0</span> | Erros: <span id="errosComp">0</span></div>
+            <button id="finalizarFase2Btn" class="btn-acao" disabled>Concluir Compostagem</button>
         </section>
 
-        <!-- ========== FASE 2: COMPOSTAGEM ========== -->
-        <section id="fase2Screen" class="screen">
-            <div class="phase-header">
-                <h1>♻️ FASE 2: Compostagem</h1>
-                <div class="stats-hud">
-                    <span>✅ Acertos: <span id="compostAcertos">0</span></span>
-                    <span>❌ Erros: <span id="compostErros">0</span></span>
+        <!-- FASE 3: PLANTANDO O FUTURO -->
+        <section id="screenFase3" class="game-screen">
+            <div class="dialogo-felipe" id="dialogFase3">
+                <div class="avatar-felipe">👦</div>
+                <div class="fala-balao"><p id="fase3Fala"></p></div>
+            </div>
+            <div class="plantio-fase3">
+                <div class="mudas-container" id="mudasContainer">
+                    <div draggable="true" class="muda" data-planta="tomate">🍅 Tomate</div>
+                    <div draggable="true" class="muda" data-planta="alface">🥬 Alface</div>
+                    <div draggable="true" class="muda" data-planta="milho">🌽 Milho</div>
+                </div>
+                <div class="canteiros" id="canteirosContainer">
+                    <div class="canteiro" data-expected="tomate">Canteiro 1 🌱</div>
+                    <div class="canteiro" data-expected="alface">Canteiro 2 🌱</div>
+                    <div class="canteiro" data-expected="milho">Canteiro 3 🌱</div>
                 </div>
             </div>
-            <div class="felipe-dialog">
-                <div class="felipe-avatar-small">👨‍🌾</div>
-                <div class="dialog-text" id="fase2Dialog">Carregando...</div>
+            <div class="regar-container" style="display:none;" id="regarContainer">
+                <button id="regarPlantasBtn">💧 Regar Plantas</button>
             </div>
-            <div class="compost-gameboard">
-                <div class="items-pool" id="itemsPool"></div>
-                <div class="compost-bin">
-                    <div class="bin" id="compostBin">🗑️ COMPOSTEIRA 🌱</div>
-                    <div class="bin reject" id="rejectBin">❌ LIXO REJEITADO</div>
-                </div>
-            </div>
-            <div class="feedback-message" id="compostMsg"></div>
-            <button id="nextToFase3" class="next-btn" style="display:none;">🌱 PRÓXIMA FASE - PLANTAR FUTURO 🌱</button>
+            <div id="crescimentoAnimacao" class="crescimento"></div>
+            <button id="finalizarFase3Btn" class="btn-acao" disabled>Concluir Plantio</button>
         </section>
 
-        <!-- ========== FASE 3: PLANTANDO O FUTURO ========== -->
-        <section id="fase3Screen" class="screen">
-            <div class="phase-header">
-                <h1>🌱 FASE 3: Plantando o Futuro</h1>
-                <div class="stats-hud">
-                    <span>🌿 Mudas: <span id="plantedCount">0</span>/6</span>
-                    <span>💧 Regadas: <span id="wateredCount">0</span></span>
-                </div>
+        <!-- QUIZ FINAL -->
+        <section id="screenQuiz" class="game-screen">
+            <div class="quiz-box">
+                <h3>📝 QUIZ DO AGROHERÓI</h3>
+                <div id="quizPergunta"></div>
+                <div id="quizOpcoes" class="quiz-opcoes"></div>
+                <button id="proximoQuizBtn" class="btn-acao" disabled>Próxima</button>
+                <div id="quizResultado"></div>
             </div>
-            <div class="felipe-dialog">
-                <div class="felipe-avatar-small">👨‍🌾</div>
-                <div class="dialog-text" id="fase3Dialog">Carregando...</div>
-            </div>
-            <div class="farm-grid">
-                <div class="beds" id="plantBeds"></div>
-                <div class="seedlings-panel">
-                    <h3>🌱 MUDAS DISPONÍVEIS</h3>
-                    <div class="seedlings-list" id="seedlingsList">
-                        <div class="seedling" data-plant="tomate">🍅 Muda de Tomate</div>
-                        <div class="seedling" data-plant="alface">🥬 Muda de Alface</div>
-                        <div class="seedling" data-plant="milho">🌽 Muda de Milho</div>
-                        <div class="seedling" data-plant="tomate">🍅 Muda de Tomate</div>
-                        <div class="seedling" data-plant="alface">🥬 Muda de Alface</div>
-                        <div class="seedling" data-plant="milho">🌽 Muda de Milho</div>
-                    </div>
-                </div>
-                <button id="waterAllBtn" class="water-btn">💧 REGAR PLANTAS 💧</button>
-            </div>
-            <div class="feedback-message" id="plantMsg"></div>
-            <button id="nextToFinal" class="next-btn" style="display:none;">🏆 FINALIZAR MISSÃO 🏆</button>
         </section>
 
-        <!-- ========== TELA FINAL ========== -->
-        <section id="finalScreen" class="screen">
-            <div class="final-scene">
-                <div class="farm-illustration">🌳 🐝 🌱 🚜 ☀️ 🌻</div>
-                <h1>AGRO FORTE, FUTURO SUSTENTÁVEL</h1>
-                <div class="felipe-final">
-                    <div class="felipe-avatar">👨‍🌾</div>
-                    <div class="final-speech">
-                        <p id="finalMsg1"></p>
-                        <p>Produzir alimentos e preservar a natureza devem caminhar juntos.</p>
-                        <p>Quando cuidamos do meio ambiente, garantimos um futuro melhor para todos!</p>
-                        <p>Cada pequena ação faz diferença.</p>
-                        <p>Você concluiu sua missão sustentável com sucesso.</p>
-                    </div>
+        <!-- CERTIFICADO -->
+        <section id="screenCertificado" class="game-screen">
+            <div class="certificado" id="certificadoContent">
+                <h2>CERTIFICADO AGROHERÓI</h2>
+                <p>Certificamos que <strong id="certNome"></strong> concluiu com sucesso a missão educativa <strong>AGROHERÓIS: A MISSÃO SUSTENTÁVEL</strong>, demonstrando conhecimentos sobre sustentabilidade, agricultura e preservação ambiental.</p>
+                <p id="dataCertificado"></p>
+            </div>
+            <button id="baixarCertificadoBtn">📄 Baixar Certificado (PDF/Imprimir)</button>
+            <button id="avancarTelaFinalBtn">✨ Avançar para Tela Final</button>
+        </section>
+
+        <!-- TELA FINAL -->
+        <section id="screenFinal" class="game-screen">
+            <div class="tela-final">
+                <div class="cenario-final-placeholder">
+                    <!-- Placeholder: árvores, abelhas, horta, trator, sol -->
+                    <div class="nature-icons">🌳 🐝 🌱 🚜 ☀️</div>
                 </div>
-                <button id="restartGameBtn" class="btn-primary">🔄 JOGAR NOVAMENTE 🔄</button>
+                <h2>🌱 AGROHERÓIS: A MISSÃO SUSTENTÁVEL 🌱</h2>
+                <div class="fala-felipe-final">
+                    <p id="finalMensagem"></p>
+                </div>
+                <div class="botoes-final">
+                    <button id="jogarNovamenteBtn">🔄 Jogar Novamente</button>
+                    <button id="menuFinalBtn">🏠 Menu Principal</button>
+                </div>
             </div>
         </section>
     </main>
 
     <footer>
-        <p>🌱 Agro Forte - Projeto Sustentável | Polinizadores, Compostagem e Plantio Consciente</p>
+        <p>🌍 Agro forte, futuro sustentável - Pequenas ações, grandes transformações | Concurso Agrinho</p>
+        <!-- Placeholder para áudio: futuramente implementar sons -->
     </footer>
 
     <script src="js/script.js"></script>
