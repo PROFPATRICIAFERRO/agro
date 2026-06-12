@@ -1,29 +1,89 @@
+/* ========== RESET E VARIÁVEIS ========== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-body {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #0d3b1f 0%, #1b5e2a 100%);
-    font-family: 'Quicksand', sans-serif;
-    padding: 20px;
+:root {
+    --bg-color: #faf7e6;
+    --card-bg: #ffffff;
+    --text-color: #1e3a2f;
+    --primary-green: #2b7a4b;
+    --light-green: #d4e8d4;
+    --yellow-honey: #f9a825;
+    --brown-earth: #6d4c41;
+    --sky-blue: #87ceeb;
+    --shadow: 0 8px 20px rgba(0,0,0,0.1);
+    --transition: all 0.3s ease;
 }
 
-.game-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    background: #fef7e0;
+body.dark {
+    --bg-color: #1a2a1f;
+    --card-bg: #2d3e2a;
+    --text-color: #f0f7e6;
+    --primary-green: #4caf50;
+    --light-green: #2e4a2a;
+}
+
+body {
+    background: linear-gradient(135deg, var(--bg-color), #e0e8c0);
+    color: var(--text-color);
+    font-family: 'Quicksand', sans-serif;
+    line-height: 1.5;
+    transition: var(--transition);
+}
+
+/* Barra de acessibilidade */
+.accessibility-bar {
+    background: var(--card-bg);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.accessibility-bar button, .accessibility-bar input {
+    background: var(--primary-green);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 30px;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: var(--transition);
+}
+
+.accessibility-bar button:hover {
+    transform: scale(1.05);
+}
+
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-color);
+}
+
+/* Game wrapper */
+.game-wrapper {
+    max-width: 1200px;
+    margin: 20px auto;
+    background: var(--card-bg);
     border-radius: 40px;
     overflow: hidden;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+    box-shadow: var(--shadow);
 }
 
 .screen {
     display: none;
-    padding: 25px;
-    animation: fadeIn 0.5s ease;
+    padding: 30px;
+    animation: fadeIn 0.4s ease;
 }
 
 .screen.active {
@@ -31,17 +91,16 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.98); }
-    to { opacity: 1; transform: scale(1); }
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* ========== TELA INICIAL ========== */
-.intro-content, .select-container, .final-content {
+.intro-container, .char-container, .final-scene {
     text-align: center;
-    padding: 20px;
 }
 
-.felipe-intro, .felipe-message, .felipe-final {
+.felipe-box {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -52,70 +111,66 @@ body {
 
 .felipe-avatar {
     font-size: 5rem;
-    background: #ffcc80;
+    background: var(--yellow-honey);
     border-radius: 50%;
     padding: 15px;
     animation: bounce 2s infinite;
 }
 
-.felipe-avatar-small {
-    font-size: 3rem;
-    background: #ffcc80;
-    border-radius: 50%;
-    padding: 10px;
-}
-
-.felipe-avatar-large {
-    font-size: 5rem;
-    background: #ffcc80;
-    border-radius: 50%;
-    padding: 15px;
-}
-
 @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+    0%,100%{ transform: translateY(0);}
+    50%{ transform: translateY(-10px);}
 }
 
-.felipe-bubble, .message-bubble, .dialog-bubble, .final-bubble {
-    background: white;
-    border-radius: 25px;
+.felipe-speech {
+    background: var(--light-green);
+    border-radius: 30px;
     padding: 20px;
-    max-width: 400px;
+    max-width: 450px;
     text-align: left;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     position: relative;
 }
 
-.felipe-bubble::before, .message-bubble::before, .dialog-bubble::before, .final-bubble::before {
+.felipe-speech::before {
     content: '';
     position: absolute;
     left: -12px;
     top: 30px;
     border-width: 8px 12px 8px 0;
     border-style: solid;
-    border-color: transparent white transparent transparent;
-}
-
-.felipe-bubble p, .message-bubble p, .dialog-bubble p, .final-bubble p {
-    margin: 8px 0;
-    color: #1e3a2f;
+    border-color: transparent var(--light-green) transparent transparent;
 }
 
 .name-input-area {
     margin: 20px auto;
 }
 
-#playerNameIntro {
+#playerNameInput {
     padding: 12px 20px;
     font-size: 1rem;
     border-radius: 50px;
-    border: 2px solid #2b7a4b;
-    width: 250px;
-    text-align: center;
+    border: 2px solid var(--primary-green);
+    width: 260px;
 }
 
-/* ========== SELEÇÃO DE PERSONAGEM ========== */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-green), #5cb85c);
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 1rem;
+}
+
+.btn-primary:hover {
+    transform: scale(1.02);
+    box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+}
+
+/* escolha personagem */
 .char-options {
     display: flex;
     justify-content: center;
@@ -127,115 +182,108 @@ body {
 .char-card {
     background: white;
     border-radius: 30px;
-    padding: 30px;
+    padding: 25px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: var(--transition);
     border: 3px solid transparent;
-    text-align: center;
     min-width: 180px;
+}
+
+.char-card.selected {
+    border-color: var(--yellow-honey);
+    background: #fff8e1;
 }
 
 .char-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
 }
 
-.char-card.selected {
-    border-color: #f9a825;
-    background: #fff8e1;
-}
-
-.char-avatar {
+.char-icon {
     font-size: 4rem;
 }
 
-/* ========== CABEÇALHO DAS FASES ========== */
+/* cabeçalho das fases */
 .phase-header {
-    background: linear-gradient(135deg, #2b7a4b, #3a9b5e);
+    background: linear-gradient(135deg, var(--primary-green), #3e8e5e);
     border-radius: 20px;
-    padding: 15px 20px;
-    margin-bottom: 20px;
-    color: white;
+    padding: 12px 20px;
     display: flex;
     justify-content: space-between;
-    align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
+    color: white;
+    margin-bottom: 20px;
 }
 
-.phase-header h1 {
-    font-size: 1.2rem;
-    font-family: 'Press Start 2P', cursive;
-}
-
-.phase-stats {
+.stats-hud {
     display: flex;
     gap: 20px;
     background: rgba(0,0,0,0.3);
-    padding: 8px 15px;
+    padding: 5px 15px;
     border-radius: 30px;
 }
 
 .felipe-dialog {
     display: flex;
     gap: 15px;
-    margin-bottom: 20px;
-    background: #e8f5e9;
+    background: var(--light-green);
     border-radius: 20px;
     padding: 15px;
+    margin-bottom: 20px;
 }
 
-/* ========== FASE 1 ========== */
-.game-canvas-container {
-    background: #87CEEB;
+.felipe-avatar-small {
+    font-size: 2.5rem;
+}
+
+/* canvas fase 1 */
+.game-canvas-area {
+    background: var(--sky-blue);
     border-radius: 20px;
     padding: 10px;
     margin-bottom: 15px;
 }
 
 canvas {
-    display: block;
-    margin: 0 auto;
-    background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 70%, #6b8c5c 70%);
-    border-radius: 15px;
     width: 100%;
     height: auto;
-}
-
-.game-controls {
-    text-align: center;
-    padding: 10px;
-    background: #fff3e0;
+    background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 70%, #6b8c5c 70%);
     border-radius: 15px;
-    margin-top: 10px;
+    display: block;
+    margin: 0 auto;
 }
 
-/* ========== FASE 2 ========== */
-.compost-game {
+.game-tips {
+    text-align: center;
+    padding: 8px;
+    background: #fff3e0;
+    border-radius: 20px;
+    margin-top: 8px;
+}
+
+/* fase 2 compostagem */
+.compost-gameboard {
     display: flex;
     gap: 30px;
     flex-wrap: wrap;
-    justify-content: center;
     margin-bottom: 20px;
 }
 
-.items-area {
+.items-pool {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    flex: 1;
-    min-width: 250px;
+    gap: 12px;
+    flex: 2;
 }
 
 .compost-item {
     background: white;
-    border-radius: 15px;
-    padding: 15px;
+    border-radius: 20px;
+    padding: 12px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.2s;
-    border: 2px solid #ddd;
-    font-size: 1.2rem;
+    transition: 0.2s;
+    border: 1px solid #ddd;
+    font-weight: bold;
 }
 
 .compost-item:hover {
@@ -243,50 +291,48 @@ canvas {
     background: #f5f5dc;
 }
 
-.composteira-area {
-    text-align: center;
-    flex: 0.5;
+.compost-bin {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.composteira {
+.bin {
     background: #795548;
     color: white;
-    padding: 30px 20px;
+    padding: 25px;
+    text-align: center;
     border-radius: 20px;
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-}
-
-.lixeira {
-    background: #f44336;
-    color: white;
-    padding: 20px;
-    border-radius: 15px;
     cursor: pointer;
     transition: 0.2s;
+    font-weight: bold;
 }
 
-.lixeira:hover {
-    background: #d32f2f;
+.bin.reject {
+    background: #c62828;
+}
+
+.bin:hover {
     transform: scale(1.02);
 }
 
-.compost-message, .plant-message {
+.feedback-message {
+    background: var(--light-green);
+    border-radius: 20px;
+    padding: 12px;
     text-align: center;
-    padding: 15px;
-    background: #fff3e0;
-    border-radius: 15px;
     margin: 15px 0;
 }
 
-/* ========== FASE 3 ========== */
-.farm-area {
+/* fase 3 plantio */
+.farm-grid {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-.plant-spots {
+.beds {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 15px;
@@ -295,162 +341,150 @@ canvas {
     border-radius: 20px;
 }
 
-.plant-spot {
+.plant-bed {
     background: #8d6e63;
     border-radius: 15px;
-    padding: 20px;
+    padding: 15px;
+    min-height: 110px;
     text-align: center;
-    min-height: 120px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: 0.2s;
     border: 2px dashed #ffd54f;
 }
 
-.plant-spot.empty:hover {
+.plant-bed.empty:hover {
     background: #a1887f;
-    transform: scale(1.02);
 }
 
-.plant-spot.planted {
+.plant-bed.planted {
     background: #4caf50;
-    border: 2px solid #ffd54f;
 }
 
-.plant-spot.grown {
+.plant-bed.grown {
     background: #66bb6a;
-    animation: growPlant 0.5s ease;
+    animation: grow 0.4s ease;
 }
 
-@keyframes growPlant {
-    0% { transform: scale(0.9); }
-    100% { transform: scale(1); }
+@keyframes grow {
+    0%{ transform: scale(0.9);}
+    100%{ transform: scale(1);}
 }
 
 .plant-emoji {
-    font-size: 2.5rem;
-    display: block;
+    font-size: 2rem;
 }
 
-.plant-name {
-    font-size: 0.8rem;
-    color: white;
-}
-
-.seedlings-area {
+.seedlings-panel {
     background: #fff8e1;
     border-radius: 20px;
     padding: 15px;
 }
 
-.seedlings {
+.seedlings-list {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
     justify-content: center;
+    margin-top: 10px;
 }
 
 .seedling {
     background: linear-gradient(135deg, #8bc34a, #689f38);
     color: white;
-    padding: 10px 15px;
-    border-radius: 25px;
+    padding: 8px 16px;
+    border-radius: 40px;
     cursor: pointer;
-    transition: 0.2s;
     font-weight: bold;
+    transition: 0.2s;
 }
 
 .seedling:hover {
-    transform: translateY(-3px);
-    background: linear-gradient(135deg, #9ccc65, #7cb342);
+    transform: translateY(-2px);
 }
 
-.watering-can {
-    text-align: center;
-}
-
-.action-water {
+.water-btn {
     background: #29b6f6;
-    color: white;
     border: none;
-    padding: 12px 25px;
-    border-radius: 50px;
-    font-size: 1.1rem;
+    padding: 12px;
+    border-radius: 40px;
+    font-weight: bold;
+    color: white;
     cursor: pointer;
-    transition: 0.2s;
+    font-size: 1rem;
 }
 
-.action-water:hover {
-    background: #0288d1;
-    transform: scale(1.05);
-}
-
-/* ========== TELA FINAL ========== */
-.sustainable-farm {
+/* Tela final */
+.final-scene {
     text-align: center;
-    margin-bottom: 30px;
+    padding: 20px;
 }
 
-.farm-scene {
+.farm-illustration {
     font-size: 3rem;
     margin-bottom: 15px;
-    animation: float 3s infinite;
 }
 
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+.felipe-final {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin: 20px 0;
 }
 
-.sustainable-farm h1 {
-    color: #2b7a4b;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 1.2rem;
+.final-speech {
+    background: var(--light-green);
+    border-radius: 25px;
+    padding: 20px;
+    max-width: 450px;
+    text-align: left;
 }
 
-/* ========== BOTÕES ========== */
-.game-btn, .next-phase-btn {
-    background: linear-gradient(135deg, #2b7a4b, #4caf50);
+/* botões next */
+.next-btn {
+    background: linear-gradient(135deg, #f9a825, #ff9800);
     color: white;
     border: none;
-    padding: 12px 25px;
-    border-radius: 50px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
-    margin-top: 15px;
-    transition: 0.2s;
-}
-
-.game-btn:hover, .next-phase-btn:hover {
-    transform: scale(1.02);
-    box-shadow: 0 5px 15px rgba(76,175,80,0.3);
-}
-
-.next-phase-btn {
+    padding: 12px;
     width: 100%;
-    background: linear-gradient(135deg, #f9a825, #ff9800);
+    border-radius: 50px;
+    font-weight: bold;
+    margin-top: 15px;
+    cursor: pointer;
 }
 
-/* ========== RESPONSIVIDADE ========== */
+footer {
+    text-align: center;
+    padding: 15px;
+    background: var(--card-bg);
+    font-size: 0.8rem;
+}
+
+/* Media Queries */
 @media (max-width: 700px) {
     .screen {
         padding: 15px;
     }
-    
-    .felipe-bubble::before, .message-bubble::before, .dialog-bubble::before, .final-bubble::before {
+    .felipe-speech::before {
         display: none;
     }
-    
-    .plant-spots {
+    .beds {
         grid-template-columns: repeat(2, 1fr);
     }
-    
-    .phase-header {
-        flex-direction: column;
-        text-align: center;
+    .stats-hud {
+        font-size: 0.7rem;
+        gap: 8px;
     }
-    
-    .items-area {
+    .phase-header h1 {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 500px) {
+    .items-pool {
         grid-template-columns: 1fr;
+    }
+    .compost-gameboard {
+        flex-direction: column;
     }
 }
