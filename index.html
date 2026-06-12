@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🐝 AGRO FORTE - Futuro Sustentável 🌱</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="game-container">
+
+        <!-- ========== TELA 1: APRESENTAÇÃO (FASE 0) ========== -->
+        <div id="introScreen" class="screen active">
+            <div class="intro-content">
+                <div class="felipe-intro">
+                    <div class="felipe-avatar">👦</div>
+                    <div class="felipe-bubble">
+                        <p id="introText1">Olá! Eu sou o Felipe!</p>
+                        <p id="introText2">Um Agro Forte depende do equilíbrio entre produção de alimentos e preservação do meio ambiente.</p>
+                        <p id="introText3">Como você se chama?</p>
+                    </div>
+                </div>
+                <div class="name-input-area">
+                    <input type="text" id="playerNameIntro" placeholder="Digite seu nome..." maxlength="20">
+                    <button class="game-btn" id="confirmNameBtn">🌱 CONTINUAR 🌱</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== TELA 2: ESCOLHA DO PERSONAGEM ========== -->
+        <div id="charSelectScreen" class="screen">
+            <div class="select-container">
+                <div class="felipe-message">
+                    <div class="felipe-avatar-small">👦</div>
+                    <div class="message-bubble">
+                        <p id="charSelectMsg">Prazer em conhecer você, <span id="displayName">...</span>!</p>
+                        <p>Hoje vamos aprender como pequenas ações ajudam a construir um futuro sustentável.</p>
+                        <p>Primeiro escolha seu personagem!</p>
+                    </div>
+                </div>
+                <div class="char-options">
+                    <div class="char-card" data-char="boy">
+                        <div class="char-avatar">👦</div>
+                        <h3>Menino</h3>
+                        <p>Fazendeiro aprendiz</p>
+                    </div>
+                    <div class="char-card" data-char="girl">
+                        <div class="char-avatar">👧</div>
+                        <h3>Menina</h3>
+                        <p>Guardiã da natureza</p>
+                    </div>
+                </div>
+                <button class="game-btn" id="startFase1Btn">🐝 COMEÇAR MISSÃO 🐝</button>
+            </div>
+        </div>
+
+        <!-- ========== FASE 1 - SALVANDO OS POLINIZADORES ========== -->
+        <div id="fase1Screen" class="screen">
+            <div class="phase-header">
+                <h1>🐝 FASE 1: Salvando os Polinizadores</h1>
+                <div class="phase-stats">
+                    <span>🌸 Flores: <span id="floresColetadas">0</span> / 10</span>
+                    <span>💨 Colisões: <span id="colisoesCount">0</span></span>
+                </div>
+            </div>
+            
+            <div class="felipe-dialog" id="fase1Dialog">
+                <div class="felipe-avatar-small">👦</div>
+                <div class="dialog-bubble">
+                    <p id="fase1DialogText">Carregando missão...</p>
+                </div>
+            </div>
+
+            <div class="game-canvas-container">
+                <canvas id="beeGameCanvas" width="800" height="400"></canvas>
+                <div class="game-controls">
+                    <p>🎮 Use as setas ↑ e ↓ para controlar a abelha!</p>
+                    <p>🌸 Colete as flores - 💨 Desvie da fumaça e do fogo!</p>
+                </div>
+            </div>
+
+            <button class="next-phase-btn" id="nextToFase2Btn" style="display: none;">♻️ PRÓXIMA FASE - COMPOSTAGEM ♻️</button>
+        </div>
+
+        <!-- ========== FASE 2 - COMPOSTAGEM ========== -->
+        <div id="fase2Screen" class="screen">
+            <div class="phase-header">
+                <h1>♻️ FASE 2: Compostagem</h1>
+                <div class="phase-stats">
+                    <span>✅ Acertos: <span id="acertosComp">0</span></span>
+                    <span>❌ Erros: <span id="errosComp">0</span></span>
+                </div>
+            </div>
+
+            <div class="felipe-dialog">
+                <div class="felipe-avatar-small">👦</div>
+                <div class="dialog-bubble">
+                    <p id="fase2DialogText">Carregando...</p>
+                </div>
+            </div>
+
+            <div class="compost-game">
+                <div class="items-area" id="itemsArea"></div>
+                <div class="composteira-area">
+                    <div class="composteira">🗑️ COMPOSTEIRA<br>🌱</div>
+                    <div class="lixeira" id="lixeira">❌ LIXO REJEITADO</div>
+                </div>
+            </div>
+
+            <div class="compost-message" id="compostMessage"></div>
+            <button class="next-phase-btn" id="nextToFase3Btn" style="display: none;">🌱 PRÓXIMA FASE - PLANTANDO O FUTURO 🌱</button>
+        </div>
+
+        <!-- ========== FASE 3 - PLANTANDO O FUTURO ========== -->
+        <div id="fase3Screen" class="screen">
+            <div class="phase-header">
+                <h1>🌱 FASE 3: Plantando o Futuro</h1>
+                <div class="phase-stats">
+                    <span>🌱 Mudas plantadas: <span id="mudasPlantadas">0</span> / 6</span>
+                    <span>💧 Regadas: <span id="regadasCount">0</span></span>
+                </div>
+            </div>
+
+            <div class="felipe-dialog">
+                <div class="felipe-avatar-small">👦</div>
+                <div class="dialog-bubble">
+                    <p id="fase3DialogText">Carregando...</p>
+                </div>
+            </div>
+
+            <div class="farm-area">
+                <div class="plant-spots" id="plantSpots"></div>
+                <div class="seedlings-area">
+                    <h3>🌱 MUDAS DISPONÍVEIS</h3>
+                    <div class="seedlings" id="seedlings">
+                        <div class="seedling" data-type="tomate">🍅 Muda de Tomate</div>
+                        <div class="seedling" data-type="alface">🥬 Muda de Alface</div>
+                        <div class="seedling" data-type="milho">🌽 Muda de Milho</div>
+                        <div class="seedling" data-type="tomate">🍅 Muda de Tomate</div>
+                        <div class="seedling" data-type="alface">🥬 Muda de Alface</div>
+                        <div class="seedling" data-type="milho">🌽 Muda de Milho</div>
+                    </div>
+                </div>
+                <div class="watering-can">
+                    <button id="waterBtn" class="action-water">💧 REGAR PLANTAS 💧</button>
+                </div>
+            </div>
+
+            <div class="plant-message" id="plantMessage"></div>
+            <button class="next-phase-btn" id="nextToFinalBtn" style="display: none;">🏆 FINALIZAR MISSÃO 🏆</button>
+        </div>
+
+        <!-- ========== TELA FINAL ========== -->
+        <div id="finalScreen" class="screen">
+            <div class="final-content">
+                <div class="sustainable-farm">
+                    <div class="farm-scene">🌳🐝🌱🚜🌻</div>
+                    <h1>AGRO FORTE, FUTURO SUSTENTÁVEL</h1>
+                </div>
+                
+                <div class="felipe-final">
+                    <div class="felipe-avatar-large">👦</div>
+                    <div class="final-bubble">
+                        <p><span id="finalPlayerName">...</span>, lembre-se:</p>
+                        <p>Produzir alimentos e preservar a natureza devem caminhar juntos.</p>
+                        <p>Quando cuidamos do meio ambiente, garantimos um futuro melhor para todos!</p>
+                    </div>
+                </div>
+
+                <button class="game-btn" id="playAgainBtn">🔄 JOGAR NOVAMENTE 🔄</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
