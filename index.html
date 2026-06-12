@@ -3,43 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>🌱 AGROHERÓIS | Missão Sustentável</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <title>🌱 AGROHERÓIS • Missão Sustentável</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="wrapper">
-        <header class="hero">
-            <div class="logo">
-                <h1>🌱 AGROHERÓIS</h1>
-                <p>Agro Forte, Futuro Sustentável</p>
+    <div class="game-container">
+        <!-- CABEÇALHO COM LOGO E ACESSIBILIDADE -->
+        <header>
+            <div class="logo-area">
+                <h1>🌱 AGROHERÓIS <span class="sub">🚜</span></h1>
+                <p>🌾 Agro Forte • Futuro Sustentável 🌻</p>
             </div>
-            <div class="toolbar">
-                <button id="darkModeBtn" title="Modo Escuro">🌙</button>
-                <button id="highContrastBtn" title="Alto Contraste">🔆</button>
-                <button id="fontPlusBtn" title="Aumentar Fonte">A+</button>
-                <button id="fontMinusBtn" title="Diminuir Fonte">A-</button>
-                <button id="resetGameBtn" title="Reiniciar Jogo">🔄</button>
-                <button id="menuBtn" title="Menu Principal">🏠</button>
+            <div class="toolbox">
+                <button id="darkModeBtn" title="Modo escuro">🌙</button>
+                <button id="highContrastBtn" title="Alto contraste">🔆</button>
+                <button id="fontPlusBtn" title="Aumentar fonte">A+</button>
+                <button id="fontMinusBtn" title="Diminuir fonte">A-</button>
+                <button id="resetGameBtn" title="Reiniciar jogo">🔄</button>
+                <button id="mainMenuBtn" title="Menu principal">🏠</button>
             </div>
         </header>
 
-        <div class="progress-wrapper">
+        <!-- BARRA DE PROGRESSO -->
+        <div class="progress-section">
             <span>📊 MISSÃO</span>
             <progress id="globalProgress" value="0" max="100"></progress>
             <span id="progressPercent">0%</span>
         </div>
 
-        <main id="gameScreen">
-            <!-- Conteúdo dinâmico -->
+        <!-- CONTEÚDO PRINCIPAL DINÂMICO -->
+        <main id="gameMain">
+            <!-- as fases serão injetadas aqui -->
         </main>
 
-        <footer class="dashboard">
-            <div class="score-card">🏆 <span id="score">0</span> pts</div>
-            <div class="badge-card">🏅 Conquistas <span id="badges">0</span>/3</div>
-            <div class="felipe-speech">
+        <!-- RODAPÉ COM PONTUAÇÃO, CONQUISTAS E FELIPE -->
+        <footer>
+            <div class="stats">
+                <div class="score">🏆 <span id="totalScore">0</span> pontos</div>
+                <div class="achievements">🏅 Conquistas <span id="totalBadges">0</span>/3</div>
+            </div>
+            <div class="guide">
                 <div class="avatar">👨‍🌾</div>
-                <div class="bubble" id="felipeMessage">Olá! Sou Felipe, seu guia agroecológico!</div>
+                <div class="speech" id="felipeSpeech">Olá! Eu sou Felipe, seu guia agroecológico! 🌱</div>
             </div>
         </footer>
     </div>
