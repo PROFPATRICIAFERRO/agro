@@ -1,148 +1,153 @@
-// ============================================================
-// AGROHERÓIS - MISSÃO SUSTENTÁVEL (VERSÃO APRIMORADA)
-// ============================================================
+// =========================================================================
+// AGROHERÓIS - JOGO EDUCATIVO COMPLETO
+// Fases: Apresentação, Abelhas (canvas/teclado), Compostagem (drag&drop),
+//        Plantio (drag&drop + regar), Quiz, Certificado.
+// Funcionalidades extras: modo escuro, alto contraste, fonte, reiniciar, menu.
+// =========================================================================
 
-// ---------- ESTADO GLOBAL ----------
+// ------------------------- ESTADO GLOBAL -------------------------
 let playerName = "";
 let gender = "boy";
 let totalScore = 0;
-let currentPhase = 0;   // 0-apresentação, 1-abelhas, 2-compostagem, 3-plantio, 4-quiz, 5-certificado
+let currentPhase = 0;   // 0=apresentação, 1=abelhas, 2=compostagem, 3=plantio, 4=quiz, 5=certificado
 let achievements = { bees: false, compost: false, farming: false, hero: false };
 
-// Minijogo Abelha
+// variáveis da fase abelhas
 let beeActive = false;
 let beeX, beeY;
 let flowers = [], smokes = [], fires = [];
 let flowersCollected = 0;
-let animationId = null;
+let animFrameId;
 let keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
 let canvas, ctx;
+let keydownHandler, keyupHandler;
 
-// Compostagem
-let correctCompost = 0;
+// compostagem
+let compostCorrect = 0;
 const COMPOST_NEED = 5;
 
-// Plantio
-let plantsPlanted = 0;
+// plantio
+let plantedCount = 0;
 let isWatered = false;
 
-// Quiz
+// quiz
 let quizHits = 0;
 
-// ---------- DOM ----------
-const gameScreen = document.getElementById("gameScreen");
-const scoreSpan = document.getElementById("score");
-const badgesSpan = document.getElementById("badges");
-const progressBar = document.getElementById("globalProgress");
-const progressPercent = document.getElementById("progressPercent");
-const felipeMsg = document.getElementById("felipeMessage");
+// ------------------------- DOM elements -------------------------
+const gameMain = document.getElementById("gameMain");
+const totalScoreSpan = document.getElementById("totalScore");
+const totalBadgesSpan = document.getElementById("totalBadges");
+const globalProgress = document.getElementById("globalProgress");
+const progressPercentSpan = document.getElementById("progressPercent");
+const felipeSpeech = document.getElementById("felipeSpeech");
 
-// helpers
+// ------------------------- FUNÇÕES AUXILIARES -------------------------
 function updateUI() {
-    scoreSpan.innerText = totalScore;
-    let total = Object.values(achievements).filter(v => v).length;
-    badgesSpan.innerText = total;
+    totalScoreSpan.innerText = totalScore;
+    let totalBadges = Object.values(achievements).filter(v => v === true).length;
+    totalBadgesSpan.innerText = totalBadges;
     let progress = 0;
     if (achievements.bees) progress += 25;
     if (achievements.compost) progress += 25;
     if (achievements.farming) progress += 25;
     if (achievements.hero) progress += 25;
-    progressBar.value = progress;
-    progressPercent.innerText = progress + "%";
+    globalProgress.value = progress;
+    progressPercentSpan.innerText = progress + "%";
 }
 
-function showFeedback(msg, isSuccess = true) {
-    const div = document.createElement("div");
-    div.className = "feedback";
-    div.innerText = msg;
-    div.style.backgroundColor = isSuccess ? "#2e7d32" : "#b22234";
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 1800);
+function showToast(msg, isSuccess = true) {
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.innerText = msg;
+    toast.style.backgroundColor = isSuccess ? "#2e7d32" : "#b52b1e";
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2200);
 }
 
 function setFelipeMessage(msg) {
-    felipeMsg.innerText = msg;
+    felipeSpeech.innerText = msg;
 }
 
 function unlockAchievement(key, title) {
     if (!achievements[key]) {
         achievements[key] = true;
-        showFeedback(`🏅 CONQUISTA: ${title}`, true);
+        showToast(`🏅 CONQUISTA: ${title}`, true);
         updateUI();
     }
 }
 
-// ---------- FASE 0: APRESENTAÇÃO ----------
+// ------------------------- FASE 0: APRESENTAÇÃO -------------------------
 function phase0() {
-    gameScreen.innerHTML = `
+    gameMain.innerHTML = `
         <div class="card">
-            <h2>🌾 Bem-vindo, futuro AgroHerói!</h2>
+            <h2>🌾 Bem-vindo à Fazenda Sustentável 🌻</h2>
             <div class="form-group">
                 <label>👤 Seu nome:</label>
                 <input type="text" id="playerNameInput" placeholder="Digite seu nome" autocomplete="off">
             </div>
             <div class="form-group">
-                <label>🧑‍🌾 Escolha seu avatar:</label><br>
-                <button id="boyBtn">👦 Menino</button>
-                <button id="girlBtn">👧 Menina</button>
+                <label>🧑‍🌾 Escolha seu personagem:</label><br>
+                <button id="boyChoice">👦 Menino</button>
+                <button id="girlChoice">👧 Menina</button>
             </div>
-            <button id="startBtn" style="background:#f3b33d;">🌱 Iniciar Missão</button>
+            <button id="startMissionBtn">🌱 INICIAR MISSÃO</button>
         </div>
     `;
-    setFelipeMessage("Olá! Sou Felipe. Vamos aprender sobre sustentabilidade no campo. Qual é o seu nome?");
+    setFelipeMessage("Olá! Eu sou Felipe. Como você se chama? Vamos salvar o planeta! 🌎");
 
-    document.getElementById("boyBtn")?.addEventListener("click", () => {
+    document.getElementById("boyChoice")?.addEventListener("click", () => {
         gender = "boy";
-        showFeedback("Avatar Menino selecionado!");
+        showToast("👦 Personagem Menino selecionado!", true);
     });
-    document.getElementById("girlBtn")?.addEventListener("click", () => {
+    document.getElementById("girlChoice")?.addEventListener("click", () => {
         gender = "girl";
-        showFeedback("Avatar Menina selecionada!");
+        showToast("👧 Personagem Menina selecionada!", true);
     });
-    document.getElementById("startBtn")?.addEventListener("click", () => {
-        const input = document.getElementById("playerNameInput");
-        if (!input.value.trim()) {
-            showFeedback("Digite seu nome primeiro!", false);
+    document.getElementById("startMissionBtn")?.addEventListener("click", () => {
+        const nameInput = document.getElementById("playerNameInput");
+        if (!nameInput.value.trim()) {
+            showToast("❌ Digite seu nome primeiro!", false);
             return;
         }
-        playerName = input.value.trim();
-        setFelipeMessage(`Prazer, ${playerName}! Você agora é um AgroHerói. Vamos proteger os polinizadores!`);
+        playerName = nameInput.value.trim();
+        setFelipeMessage(`Prazer, ${playerName}! Agora você é um AgroHerói. Vamos proteger os polinizadores! 🐝`);
         currentPhase = 1;
         phase1();
     });
 }
 
-// ---------- FASE 1: ABELHAS (Canvas + Teclado) ----------
+// ------------------------- FASE 1: ABELHAS (CANVAS + SETAS) -------------------------
 function phase1() {
-    gameScreen.innerHTML = `
+    gameMain.innerHTML = `
         <div class="card">
             <h2>🐝 Salvando os Polinizadores</h2>
-            <p>🕹️ Use as <strong>setas do teclado</strong> para mover a abelha. Colete 10 flores e desvie da fumaça/fogo!</p>
-            <canvas id="beeCanvas" width="850" height="450" class="canvas-game"></canvas>
-            <div style="text-align:center; margin-top:16px;">🌸 Flores coletadas: <span id="flowerCount">0</span> / 10</div>
-            <button id="resetBeeBtn">🔄 Reiniciar fase</button>
+            <p>🕹️ Use as <strong>setas do teclado</strong> para mover a abelha. Colete 10 flores 🌸 e desvie da fumaça 💨 e do fogo 🔥!</p>
+            <canvas id="beeCanvas" width="950" height="500" class="bee-canvas"></canvas>
+            <div style="text-align:center; margin-top: 20px; font-size:1.2rem;">🌸 Flores coletadas: <span id="flowerCount">0</span> / 10</div>
+            <button id="resetBeeBtn" style="margin-top:20px;">🔄 Reiniciar fase</button>
         </div>
     `;
 
-    setFelipeMessage(`${playerName}, as abelhas são vitais para a agricultura. Salve-as!`);
+    setFelipeMessage(`${playerName}, as abelhas polinizam 75% das plantas. Vamos salvá-las! 🐝💛`);
 
     canvas = document.getElementById("beeCanvas");
     ctx = canvas.getContext("2d");
 
-    // Ajuste responsivo do canvas
+    // Ajuste responsivo
     const resizeCanvas = () => {
         const container = canvas.parentElement;
-        const maxWidth = container.clientWidth - 40;
-        if (maxWidth < 850) {
+        let maxW = container.clientWidth - 40;
+        if (maxW < 950) {
             canvas.style.width = "100%";
             canvas.style.height = "auto";
         } else {
-            canvas.style.width = "850px";
+            canvas.style.width = "950px";
         }
     };
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
 
+    // Inicializar elementos
     beeX = canvas.width / 2;
     beeY = canvas.height / 2;
     flowers = [];
@@ -151,57 +156,59 @@ function phase1() {
     flowersCollected = 0;
     document.getElementById("flowerCount").innerText = flowersCollected;
 
-    for (let i = 0; i < 12; i++) flowers.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height });
-    for (let i = 0; i < 6; i++) smokes.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height });
-    for (let i = 0; i < 4; i++) fires.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height });
+    for (let i = 0; i < 14; i++) flowers.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height });
+    for (let i = 0; i < 8; i++) smokes.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height });
+    for (let i = 0; i < 5; i++) fires.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height });
 
     beeActive = true;
 
     function updateMovement() {
-        let speed = 5.5;
+        let speed = 6;
         if (keys.ArrowUp) beeY -= speed;
         if (keys.ArrowDown) beeY += speed;
         if (keys.ArrowLeft) beeX -= speed;
         if (keys.ArrowRight) beeX += speed;
-        beeX = Math.min(Math.max(beeX, 18), canvas.width - 18);
-        beeY = Math.min(Math.max(beeY, 18), canvas.height - 18);
+        beeX = Math.min(Math.max(beeX, 22), canvas.width - 22);
+        beeY = Math.min(Math.max(beeY, 22), canvas.height - 22);
 
-        // coleta flores
+        // Coletar flores
         for (let i = 0; i < flowers.length; i++) {
             let f = flowers[i];
-            if (Math.hypot(beeX - f.x, beeY - f.y) < 22) {
+            if (Math.hypot(beeX - f.x, beeY - f.y) < 24) {
                 flowers.splice(i, 1);
                 flowersCollected++;
                 totalScore += 10;
                 updateUI();
                 document.getElementById("flowerCount").innerText = flowersCollected;
-                showFeedback("+10 pts | Flor protegida!", true);
+                showToast("+10 pontos! 🌸 Flor protegida!", true);
                 break;
             }
         }
-        // colisão perigos
+        // Perigos: fumaça e fogo
         for (let s of smokes) {
-            if (Math.hypot(beeX - s.x, beeY - s.y) < 24) {
+            if (Math.hypot(beeX - s.x, beeY - s.y) < 26) {
                 totalScore = Math.max(0, totalScore - 5);
                 updateUI();
-                showFeedback("-5 pts! Evite a fumaça!", false);
-                beeX = 40; beeY = 40;
+                showToast("-5 pontos! Evite a fumaça! 💨", false);
+                beeX = 60; beeY = 60;
             }
         }
         for (let f of fires) {
-            if (Math.hypot(beeX - f.x, beeY - f.y) < 24) {
+            if (Math.hypot(beeX - f.x, beeY - f.y) < 26) {
                 totalScore = Math.max(0, totalScore - 5);
                 updateUI();
-                showFeedback("-5 pts! Fogo queima a vegetação!", false);
-                beeX = 40; beeY = 40;
+                showToast("-5 pontos! Fogo queima a vegetação! 🔥", false);
+                beeX = 60; beeY = 60;
             }
         }
 
         if (flowersCollected >= 10) {
             beeActive = false;
-            if (animationId) cancelAnimationFrame(animationId);
+            cancelAnimationFrame(animFrameId);
+            window.removeEventListener("keydown", keydownHandler);
+            window.removeEventListener("keyup", keyupHandler);
             unlockAchievement("bees", "Guardião das Abelhas");
-            setFelipeMessage(`Excelente, ${playerName}! Você protegeu os polinizadores. Agora, compostagem!`);
+            setFelipeMessage(`Excelente, ${playerName}! Você protegeu os polinizadores. Vamos compostar! ♻️`);
             currentPhase = 2;
             phase2();
         }
@@ -210,49 +217,50 @@ function phase1() {
     function drawGame() {
         if (!ctx) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#c5e3a2";
+        ctx.fillStyle = "#c5e5a2";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        // flores
+
+        // Flores
         flowers.forEach(f => {
             ctx.beginPath();
-            ctx.arc(f.x, f.y, 9, 0, Math.PI * 2);
-            ctx.fillStyle = "#ffbb77";
+            ctx.arc(f.x, f.y, 10, 0, Math.PI * 2);
+            ctx.fillStyle = "#ffbf69";
             ctx.fill();
             ctx.fillStyle = "#e67e22";
             ctx.beginPath();
-            ctx.arc(f.x - 2, f.y - 2, 4, 0, Math.PI * 2);
+            ctx.arc(f.x - 3, f.y - 3, 4, 0, Math.PI * 2);
             ctx.fill();
         });
-        // fumaças
+        // Fumaças
         smokes.forEach(s => {
             ctx.beginPath();
-            ctx.arc(s.x, s.y, 14, 0, Math.PI * 2);
-            ctx.fillStyle = "#8a8a8a";
+            ctx.arc(s.x, s.y, 15, 0, Math.PI * 2);
+            ctx.fillStyle = "#a0a0a0";
             ctx.fill();
         });
-        // fogo
+        // Fogos
         fires.forEach(f => {
             ctx.beginPath();
-            ctx.arc(f.x, f.y, 13, 0, Math.PI * 2);
+            ctx.arc(f.x, f.y, 14, 0, Math.PI * 2);
             ctx.fillStyle = "#e67e22";
             ctx.fill();
             ctx.fillStyle = "#c0392b";
             ctx.beginPath();
-            ctx.arc(f.x - 3, f.y - 3, 5, 0, Math.PI * 2);
+            ctx.arc(f.x - 4, f.y - 4, 6, 0, Math.PI * 2);
             ctx.fill();
         });
-        // abelha
-        ctx.fillStyle = "#f5c542";
+        // Abelha
+        ctx.fillStyle = "#f7d44a";
         ctx.beginPath();
-        ctx.ellipse(beeX, beeY, 16, 12, 0, 0, Math.PI * 2);
+        ctx.ellipse(beeX, beeY, 18, 14, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "#2c2b26";
         ctx.beginPath();
-        ctx.ellipse(beeX - 6, beeY - 3, 3, 2, 0, 0, Math.PI * 2);
+        ctx.ellipse(beeX - 7, beeY - 4, 4, 3, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "#fff";
         ctx.beginPath();
-        ctx.ellipse(beeX + 6, beeY - 3, 3, 2, 0, 0, Math.PI * 2);
+        ctx.ellipse(beeX + 7, beeY - 4, 4, 3, 0, 0, Math.PI * 2);
         ctx.fill();
     }
 
@@ -260,19 +268,17 @@ function phase1() {
         if (!beeActive) return;
         updateMovement();
         drawGame();
-        animationId = requestAnimationFrame(gameLoop);
+        animFrameId = requestAnimationFrame(gameLoop);
     }
-
     gameLoop();
 
-    // eventos teclado
-    const keydownHandler = (e) => {
+    keydownHandler = (e) => {
         if (keys.hasOwnProperty(e.key)) {
             keys[e.key] = true;
             e.preventDefault();
         }
     };
-    const keyupHandler = (e) => {
+    keyupHandler = (e) => {
         if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
     };
     window.addEventListener("keydown", keydownHandler);
@@ -280,43 +286,45 @@ function phase1() {
 
     document.getElementById("resetBeeBtn")?.addEventListener("click", () => {
         beeActive = false;
-        cancelAnimationFrame(animationId);
+        cancelAnimationFrame(animFrameId);
         window.removeEventListener("keydown", keydownHandler);
         window.removeEventListener("keyup", keyupHandler);
         phase1();
     });
 }
 
-// ---------- FASE 2: COMPOSTAGEM (Drag & Drop) ----------
+// ------------------------- FASE 2: COMPOSTAGEM (DRAG & DROP) -------------------------
 function phase2() {
-    gameScreen.innerHTML = `
+    gameMain.innerHTML = `
         <div class="card">
-            <h2>♻️ Compostagem Inteligente</h2>
-            <p>Arraste os <strong>resíduos orgânicos</strong> para a composteira. Evite lixo não biodegradável.</p>
+            <h2>♻️ Compostagem Sustentável</h2>
+            <p>Arraste os <strong>resíduos orgânicos</strong> para a composteira. Evite pilha, lata e plástico! 🌿</p>
             <div class="compost-bin" id="compostBin">🗑️ COMPOSTEIRA 🌱</div>
             <div id="itemsContainer" style="margin: 20px 0;"></div>
-            <p>✅ Acertos: <span id="compostCorrect">0</span> / ${COMPOST_NEED}</p>
-            <button id="resetCompostBtn">↺ Reiniciar Fase</button>
+            <p>✅ Acertos: <span id="compostCorrectCount">0</span> / ${COMPOST_NEED}</p>
+            <button id="resetCompostBtn">↺ Reiniciar fase</button>
         </div>
     `;
 
-    correctCompost = 0;
-    const itens = [
-        { nome: "🍌 Casca de banana", tipo: "org" }, { nome: "🍎 Casca de maçã", tipo: "org" },
-        { nome: "🍂 Folhas secas", tipo: "org" }, { nome: "🥬 Restos de verdura", tipo: "org" },
-        { nome: "🔋 Pilha", tipo: "bad" }, { nome: "🥫 Lata de alumínio", tipo: "bad" },
-        { nome: "🥤 Garrafa PET", tipo: "bad" }
+    setFelipeMessage("Separe os resíduos corretamente: orgânicos viram adubo, rejeitos não! 🍂");
+
+    compostCorrect = 0;
+    const itemList = [
+        { name: "🍌 Casca de banana", type: "org" }, { name: "🍎 Casca de maçã", type: "org" },
+        { name: "🍂 Folhas secas", type: "org" }, { name: "🥬 Restos de verduras", type: "org" },
+        { name: "🔋 Pilha", type: "bad" }, { name: "🥫 Lata de alumínio", type: "bad" },
+        { name: "🥤 Garrafa PET", type: "bad" }
     ];
 
     const container = document.getElementById("itemsContainer");
-    itens.forEach(item => {
+    itemList.forEach(item => {
         const div = document.createElement("div");
-        div.innerText = item.nome;
+        div.innerText = item.name;
         div.setAttribute("draggable", "true");
         div.classList.add("drag-item");
-        div.setAttribute("data-type", item.tipo);
+        div.setAttribute("data-type", item.type);
         div.addEventListener("dragstart", e => {
-            e.dataTransfer.setData("text/plain", JSON.stringify({ type: item.tipo, name: item.nome }));
+            e.dataTransfer.setData("text/plain", JSON.stringify({ type: item.type, name: item.name }));
         });
         container.appendChild(div);
     });
@@ -327,50 +335,49 @@ function phase2() {
         e.preventDefault();
         const data = JSON.parse(e.dataTransfer.getData("text/plain"));
         if (data.type === "org") {
-            correctCompost++;
+            compostCorrect++;
             totalScore += 10;
             updateUI();
-            showFeedback(`+10: ${data.name} -> compostagem!`, true);
+            showToast(`+10 pontos! ✅ ${data.name} foi para compostagem!`, true);
         } else {
             totalScore = Math.max(0, totalScore - 5);
             updateUI();
-            showFeedback(`-5: ${data.name} não é orgânico!`, false);
+            showToast(`❌ -5 pontos! ${data.name} NÃO é orgânico!`, false);
         }
-        document.getElementById("compostCorrect").innerText = correctCompost;
-        if (correctCompost >= COMPOST_NEED) {
+        document.getElementById("compostCorrectCount").innerText = compostCorrect;
+        if (compostCorrect >= COMPOST_NEED) {
             unlockAchievement("compost", "Mestre da Compostagem");
-            setFelipeMessage(`Incrível, ${playerName}! Você produziu adubo natural. Vamos plantar!`);
+            setFelipeMessage(`Maravilha, ${playerName}! Você produziu adubo natural. Vamos plantar o futuro! 🌽`);
             currentPhase = 3;
             phase3();
         }
     });
 
     document.getElementById("resetCompostBtn")?.addEventListener("click", () => phase2());
-    setFelipeMessage("Separe corretamente: orgânicos viram adubo, rejeitos não!");
 }
 
-// ---------- FASE 3: PLANTIO ----------
+// ------------------------- FASE 3: PLANTIO (DRAG + REGAR) -------------------------
 function phase3() {
-    gameScreen.innerHTML = `
+    gameMain.innerHTML = `
         <div class="card">
             <h2>🌽 Plantando o Futuro</h2>
-            <p>Arraste cada muda para o canteiro correspondente e depois regue.</p>
+            <p>Arraste cada muda para o canteiro correto e depois regue com carinho 💧</p>
             <div class="garden-grid" id="gardenPlots">
                 <div class="plot" data-crop="tomato">🍅 Tomate</div>
                 <div class="plot" data-crop="lettuce">🥬 Alface</div>
                 <div class="plot" data-crop="corn">🌽 Milho</div>
             </div>
-            <div id="seedlingsArea">
+            <div id="seedlingsContainer">
                 <div class="seedling" draggable="true" data-crop="tomato">🍅 Muda de Tomate</div>
                 <div class="seedling" draggable="true" data-crop="lettuce">🥬 Muda de Alface</div>
                 <div class="seedling" draggable="true" data-crop="corn">🌽 Muda de Milho</div>
             </div>
-            <button id="waterBtn" disabled>💧 Regar Plantação</button>
-            <div id="growthAnimation" style="margin-top:20px;"></div>
+            <button id="waterBtn" disabled>💧 REGAR PLANTAÇÃO</button>
+            <div id="growthAnim" style="margin-top: 25px;"></div>
         </div>
     `;
 
-    plantsPlanted = 0;
+    plantedCount = 0;
     isWatered = false;
 
     const seedlings = document.querySelectorAll(".seedling");
@@ -381,6 +388,7 @@ function phase3() {
             e.dataTransfer.setData("text/plain", seed.getAttribute("data-crop"));
         });
     });
+
     plots.forEach(plot => {
         plot.addEventListener("dragover", e => e.preventDefault());
         plot.addEventListener("drop", e => {
@@ -388,64 +396,77 @@ function phase3() {
             const crop = e.dataTransfer.getData("text/plain");
             if (plot.getAttribute("data-crop") === crop && !plot.innerText.includes("🌱")) {
                 plot.innerHTML += " 🌱";
-                plantsPlanted++;
+                plantedCount++;
                 totalScore += 15;
                 updateUI();
-                showFeedback("Muda plantada corretamente!", true);
-                if (plantsPlanted === 3) document.getElementById("waterBtn").disabled = false;
+                showToast("✅ Muda plantada corretamente!", true);
+                if (plantedCount === 3) document.getElementById("waterBtn").disabled = false;
             } else {
                 totalScore = Math.max(0, totalScore - 5);
                 updateUI();
-                showFeedback("Canteiro errado para essa muda", false);
+                showToast("❌ Canteiro errado para essa muda!", false);
             }
         });
     });
 
     document.getElementById("waterBtn").addEventListener("click", () => {
-        if (plantsPlanted === 3 && !isWatered) {
+        if (plantedCount === 3 && !isWatered) {
             isWatered = true;
-            showFeedback("💦 Você regou as plantas! Elas cresceram fortes.", true);
-            document.getElementById("growthAnimation").innerHTML = "<p style='font-size:1.4rem'>🌱 → 🌿 → 🍅🥬🌽</p><p>Colheita sustentável realizada!</p>";
+            showToast("💦 Você regou! As plantas estão crescendo... 🌱➡️🌿", true);
+            document.getElementById("growthAnim").innerHTML = `
+                <div style="background:#def0c3; border-radius:48px; padding:20px; text-align:center;">
+                    <p style="font-size:1.8rem;">🌱 → 🌿 → 🍅🥬🌽</p>
+                    <p><strong>Colheita abundante e sustentável!</strong></p>
+                </div>
+            `;
             totalScore += 30;
             updateUI();
             unlockAchievement("farming", "Agricultor Sustentável");
-            setFelipeMessage(`Parabéns, ${playerName}! Você produziu alimentos de forma ecológica. Quiz final!`);
+            setFelipeMessage(`Parabéns, ${playerName}! Você cultivou alimentos de forma ecológica. Hora do quiz! 📚`);
             currentPhase = 4;
             phase4();
-        } else if (!isWatered) showFeedback("Plante todas as mudas antes de regar!", false);
+        } else if (!isWatered) {
+            showToast("⚠️ Plante todas as mudas antes de regar!", false);
+        }
     });
-    setFelipeMessage("Plante cada muda no lugar certo. Depois, regue com carinho!");
+    setFelipeMessage("Plante cada muda no lugar certo e depois regue para ver a magia acontecer! 🌿");
 }
 
-// ---------- QUIZ FINAL ----------
+// ------------------------- QUIZ FINAL -------------------------
 function phase4() {
-    gameScreen.innerHTML = `
+    gameMain.innerHTML = `
         <div class="card">
             <h2>📝 Quiz do AgroHerói</h2>
-            <div id="q1"><p>1️⃣ Qual a principal função das abelhas?</p><button data-resp="0">Produzir mel</button><button data-resp="1">Polinizar plantas ✅</button><button data-resp="2">Fazer barulho</button></div>
-            <div id="q2"><p>2️⃣ O que pode ir para a composteira?</p><button data-resp="0">Casca de banana ✅</button><button data-resp="1">Pilha</button><button data-resp="2">Garrafa PET</button></div>
-            <div id="q3"><p>3️⃣ Prática sustentável no campo?</p><button data-resp="0">Queimada</button><button data-resp="1">Desmatamento</button><button data-resp="2">Compostagem e preservação ✅</button></div>
-            <button id="finishQuizBtn" style="margin-top:25px;">✅ Finalizar Quiz</button>
+            <div id="q1"><p>🐝 1. Qual a principal função das abelhas na agricultura?</p>
+                <button data-resp="0">Produzir mel</button><button data-resp="1">Polinizar plantas ✅</button><button data-resp="2">Fazer barulho</button>
+            </div>
+            <div id="q2"><p>♻️ 2. O que pode ir para a composteira?</p>
+                <button data-resp="0">Casca de banana ✅</button><button data-resp="1">Pilha</button><button data-resp="2">Garrafa PET</button>
+            </div>
+            <div id="q3"><p>🌍 3. Qual prática ajuda uma agricultura sustentável?</p>
+                <button data-resp="0">Queimadas</button><button data-resp="1">Desmatamento</button><button data-resp="2">Compostagem e preservação ✅</button>
+            </div>
+            <button id="finishQuizBtn" style="margin-top: 30px;">✅ FINALIZAR QUIZ</button>
         </div>
     `;
 
     quizHits = 0;
     const allBtns = document.querySelectorAll("[data-resp]");
     allBtns.forEach(btn => {
-        btn.addEventListener("click", (e) => {
+        btn.addEventListener("click", () => {
             const parent = btn.parentElement;
-            const val = parseInt(btn.getAttribute("data-resp"));
+            const answer = parseInt(btn.getAttribute("data-resp"));
             let correct = false;
-            if (parent.id === "q1" && val === 1) correct = true;
-            if (parent.id === "q2" && val === 0) correct = true;
-            if (parent.id === "q3" && val === 2) correct = true;
+            if (parent.id === "q1" && answer === 1) correct = true;
+            if (parent.id === "q2" && answer === 0) correct = true;
+            if (parent.id === "q3" && answer === 2) correct = true;
             if (correct) {
                 btn.style.background = "#2ecc71";
-                showFeedback("Resposta correta!", true);
+                showToast("✅ Resposta correta!", true);
                 quizHits++;
             } else {
                 btn.style.background = "#e74c3c";
-                showFeedback("Resposta incorreta. Revisite os conceitos!", false);
+                showToast("❌ Resposta incorreta. Revisite os conteúdos!", false);
             }
             parent.querySelectorAll("button").forEach(b => b.disabled = true);
         });
@@ -459,55 +480,55 @@ function phase4() {
             currentPhase = 5;
             phase5();
         } else {
-            showFeedback("Você errou algumas perguntas. Reinicie o jogo para tentar novamente.", false);
+            showToast("Você errou algumas questões. Reinicie o jogo para tentar novamente.", false);
         }
     });
-    setFelipeMessage("Vamos testar seus conhecimentos sobre sustentabilidade!");
+    setFelipeMessage("Teste seus conhecimentos sobre sustentabilidade no campo! 🌱");
 }
 
-// ---------- CERTIFICADO E TELA FINAL ----------
+// ------------------------- CERTIFICADO E TELA FINAL -------------------------
 function phase5() {
-    gameScreen.innerHTML = `
+    gameMain.innerHTML = `
         <div class="card" style="text-align:center;">
-            <h2>🏅 CERTIFICADO AGROHERÓI</h2>
-            <p>Certificamos que <strong>${playerName}</strong> completou a missão <strong>"AGROHERÓIS: A MISSÃO SUSTENTÁVEL"</strong> com excelência em práticas ecológicas, proteção aos polinizadores, compostagem e plantio sustentável.</p>
-            <button id="downloadCert">📄 Baixar Certificado (Imprimir)</button>
-            <hr style="margin: 24px 0;">
-            <div style="background:#e4f5cf; border-radius:48px; padding:22px;">
-                🌳🐝🌱🚜☀️
+            <h2>🏅 CERTIFICADO AGROHERÓI 🏅</h2>
+            <p style="font-size:1.1rem;">Certificamos que <strong>${playerName}</strong> concluiu com sucesso a missão <strong>"AGROHERÓIS: A MISSÃO SUSTENTÁVEL"</strong>, demonstrando conhecimentos sobre polinização, compostagem, plantio sustentável e preservação ambiental.</p>
+            <button id="downloadCertBtn">📄 Baixar Certificado (Imprimir)</button>
+            <hr style="margin: 30px 0;">
+            <div style="background:#e2f0cf; border-radius: 60px; padding: 30px;">
+                <p style="font-size:2rem;">🌳🐝🌱🚜☀️</p>
                 <h3>Agricultura + Natureza = Futuro Vivo</h3>
-                <p>"Produzir alimentos e preservar a natureza caminham juntos."</p>
-                <button id="playAgain">🔄 Jogar Novamente</button>
-                <button id="menuAgain">🏠 Menu Principal</button>
+                <p style="margin:15px 0;">"Pequenas ações geram grandes transformações."</p>
+                <button id="playAgainBtn">🔄 Jogar Novamente</button>
+                <button id="menuAgainBtn">🏠 Menu Principal</button>
             </div>
         </div>
     `;
-    setFelipeMessage(`${playerName}, você é um verdadeiro guardião do agro sustentável! Continue assim.`);
+    setFelipeMessage(`${playerName}, você é um verdadeiro guardião do agro sustentável! Continue assim! 🌎💚`);
 
-    document.getElementById("downloadCert")?.addEventListener("click", () => window.print());
-    document.getElementById("playAgain")?.addEventListener("click", () => location.reload());
-    document.getElementById("menuAgain")?.addEventListener("click", () => location.reload());
+    document.getElementById("downloadCertBtn")?.addEventListener("click", () => window.print());
+    document.getElementById("playAgainBtn")?.addEventListener("click", () => location.reload());
+    document.getElementById("menuAgainBtn")?.addEventListener("click", () => location.reload());
 }
 
-// ---------- INICIALIZAÇÃO E ACESSIBILIDADE ----------
-function initGame() {
+// ------------------------- INICIALIZAÇÃO E ACESSIBILIDADE -------------------------
+function startGame() {
     phase0();
     updateUI();
 }
 
-// Controles externos
+// Eventos de acessibilidade e controles globais
 document.getElementById("darkModeBtn")?.addEventListener("click", () => document.body.classList.toggle("dark"));
 document.getElementById("highContrastBtn")?.addEventListener("click", () => document.body.classList.toggle("high-contrast"));
-let fontLevel = 0;
+let fontSizeLevel = 0;
 document.getElementById("fontPlusBtn")?.addEventListener("click", () => {
-    if (fontLevel === 0) { document.body.classList.add("font-large"); fontLevel = 1; }
-    else if (fontLevel === 1) { document.body.classList.remove("font-large"); document.body.classList.add("font-xlarge"); fontLevel = 2; }
+    if (fontSizeLevel === 0) { document.body.classList.add("font-large"); fontSizeLevel = 1; }
+    else if (fontSizeLevel === 1) { document.body.classList.remove("font-large"); document.body.classList.add("font-xlarge"); fontSizeLevel = 2; }
 });
 document.getElementById("fontMinusBtn")?.addEventListener("click", () => {
-    if (fontLevel === 2) { document.body.classList.remove("font-xlarge"); document.body.classList.add("font-large"); fontLevel = 1; }
-    else if (fontLevel === 1) { document.body.classList.remove("font-large"); fontLevel = 0; }
+    if (fontSizeLevel === 2) { document.body.classList.remove("font-xlarge"); document.body.classList.add("font-large"); fontSizeLevel = 1; }
+    else if (fontSizeLevel === 1) { document.body.classList.remove("font-large"); fontSizeLevel = 0; }
 });
 document.getElementById("resetGameBtn")?.addEventListener("click", () => location.reload());
-document.getElementById("menuBtn")?.addEventListener("click", () => location.reload());
+document.getElementById("mainMenuBtn")?.addEventListener("click", () => location.reload());
 
-initGame();
+startGame();
